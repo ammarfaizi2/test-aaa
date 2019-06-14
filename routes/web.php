@@ -35,7 +35,7 @@ $router->get('/', function () use ($router) {
     return $router->app->version();
 });
 
-$router->delete("/checklists/{checklistId}", function ($checklistId) {
+$router->get("/checklists/{checklistId}", function ($checklistId) {
 	dd($checklistId);
 });
 
@@ -56,15 +56,15 @@ $router->post('/checklists', function (Request $request) {
 	foreach (['object_domain', 'object_id', 'due', 'urgency', 'description', 'task_id'] as $k) {
 		$checklist->{$k} = $data["data"]["attributes"][$k];
 	}
-	//$checklist->created_by = Auth::user()->id;
+
+	$checklist->created_by = Auth::user()->id;
 
 	$error = false;
 
 	return response()->json(
 		handleInternalError(function () use ($checklist) { 
 			$checklist->save();
-			$checklist = $checklist::where("id", $checklist->id)->first();
-			$checklist = [
+			$ret = [
 				"data" => [
 					"type" => "checklists",
 					"id" => $checklist->id,
@@ -73,8 +73,18 @@ $router->post('/checklists', function (Request $request) {
 						env("APP_URL"), $checklist->id)
 				]
 			];
-			unset($checklist["data"]["attributes"]["id"]);
-			return $checklist;
+
+			// dd($ret);
+
+			$ptr = &$ret["data"]["attributes"];
+			$ptr["completed_at"] = $checklist->getCompletedAt();
+			$ptr["is_completed"] = $checklist->isCompleted();
+			$ptr["updated_by"] = $checklist->getUpdatedBy();
+			$ret["data"]["id"] = $ret["data"]["attributes"]["id"];
+
+			unset($ret["data"]["attributes"]["id"], $ptr);
+
+			return $ret;
 		}, $error), $error !== false ? 500 : 200);
 });
 
