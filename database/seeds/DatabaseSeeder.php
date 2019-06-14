@@ -12,5 +12,12 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         // $this->call('UsersTableSeeder');
+        DB::table('users')->insert(
+        	[
+        		'username' => 'ammarfaizi2',
+        		'token' => '1LQxW0CjRz8ZaY1GvOxoCuHlNS7oecmQxEYJ4V/Fpd+WmfeUOwRVhw==',
+        		'created_at' => date('Y-m-d H:i:s')
+        	]
+        );
     }
 }
