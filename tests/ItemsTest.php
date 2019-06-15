@@ -135,4 +135,29 @@ class ItemsTest extends TestCase
 
 		$id++;
 	}
+
+	/**
+	 * @dataProvider itemsToBeCompleted
+	 * @param array $items
+	 * @return void
+	 */
+	public function testCompleteItem(array $items): void
+	{
+		$this->assertTrue(true);
+	}
+
+	/**
+	 * @return array
+	 */
+	public function itemsToBeCompleted(): array
+	{
+		return [
+			[
+				[
+					"checklist_id" => 1,
+					"item_id" => [1, 2, 3]
+				]
+			]
+		];
+	}
 }
