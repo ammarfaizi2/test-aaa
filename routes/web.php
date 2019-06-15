@@ -127,12 +127,12 @@ $router->get('/checklists', function (Request $request) {
 			"urgency", "updated_by", "created_by", "created_at", "updated_at"
 		];
 
-		if (isset($q["limit"]) && is_numeric($q["limit"])) {
-			$limit = (int)$q["limit"];
+		if (isset($q["page"]["limit"]) && is_numeric($q["page"]["limit"])) {
+			$limit = (int)$q["page"]["limit"];
 		}
 
-		if (isset($q["offset"]) && is_numeric($q["offset"])) {
-			$offset = (int)$q["offset"];
+		if (isset($q["page"]["offset"]) && is_numeric($q["page"]["offset"])) {
+			$offset = (int)$q["page"]["offset"];
 		}
 
 		if (isset($q["sort"]) && is_string($q["sort"]) && isset($q["sort"][0])) {
@@ -170,7 +170,9 @@ $router->get('/checklists', function (Request $request) {
 		$checklist->setInternalLimit($limit);
 		$checklist->setInternalOffset($offset);
 		is_string($sort) and $checklist->setInternalSort($sort, $sortType);
+		$checklist->setInternalQueryString($q);
 
+		$data = $checklist->getListOfChecklists();
 		$ret = [
 			"meta" => [
 				"count" => 0,
@@ -182,8 +184,9 @@ $router->get('/checklists', function (Request $request) {
 				"next" => $checklist->getNextLink(),
 				"back" => $checklist->getBackLink()
 			],
-			"data" => $checklist->getListOfChecklists()
+			"data" => $data
 		];
+		unset($data);
 
 		dd($ret);
 

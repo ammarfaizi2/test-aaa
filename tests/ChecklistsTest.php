@@ -291,7 +291,7 @@ class ChecklistsTest extends TestCase
 			[
 				[
 					"object_domain" => "contact",
-					"object_id" => "1",
+					"object_id" => "2",
 					"due" => "2019-01-25T07:50:14+00:00",
 					"urgency" => 3,
 					"description" => "Need to pick up this guy.",

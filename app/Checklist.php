@@ -57,6 +57,16 @@ class Checklist extends Model
 	private $internalSortType = "ASC";
 
 	/**
+	 * @var int
+	 */
+	private $internalTotal = 0;
+
+	/**
+	 * @var array
+	 */
+	private $internalQueryString = [];
+
+	/**
 	 * Constructor.
 	 */
 	public function __construct()
@@ -72,6 +82,15 @@ class Checklist extends Model
 	}
 
 	/**
+	 * @param array $query
+	 * @return void
+	 */
+	public function setInternalQueryString(array $query): void
+	{
+		$this->internalQueryString = $query;
+	}
+
+	/**
 	 * @override {partial override}
 	 * @fallback parent::__call
 	 * @param string $methodName
@@ -80,18 +99,55 @@ class Checklist extends Model
 	 */
 	public function __call($methodName, $parameters)
 	{
+		$buildQuery = function ($limit, $offset, $opt = []) {
+			return str_replace(["%5B", "%5D"], ["[", "]"],
+				http_build_query(
+				array_merge([
+					"page" => [
+						"limit" => $limit,
+						"offset" => $offset
+					]
+				], $opt)
+			));
+		};
+
 		switch ($methodName) {
 			case 'getFirstLink':
-				return 'fisrt_link';
+				return sprintf("%s/checklists?%s", env("APP_URL"), $buildQuery(
+					$this->internalLimit,
+					0,
+					$this->internalQueryString
+				));
 				break;
 			case 'getLastLink':
-				return 'last_link';
+				return sprintf("%s/checklists?%s", env("APP_URL"), $buildQuery(
+					$this->internalLimit,
+					$this->internalTotal === 0 ? 0 :
+					(
+						($this->internalLimit >= $this->internalTotal) ? 0 :
+						(int)ceil($this->internalTotal / $this->internalLimit)
+					),
+					$this->internalQueryString
+				));
 				break;
 			case 'getNextLink':
-				return 'next_link';
+
+				$offset = $this->internalTotal === 0 ? 0 :
+					(int)ceil($this->internalTotal / $this->internalLimit);
+
+				return $offset < $this->internalLimit ? null :
+				sprintf("%s/checklists?%s", env("APP_URL"), $buildQuery(
+					$this->internalLimit,
+					$this->internalQueryString
+				));
 				break;
 			case 'getBackLink':
-				return 'back_link';
+				return $this->internalOffset === 0 ? null :
+				sprintf("%s/checklists?%s", env("APP_URL"), $buildQuery(
+					$this->internalLimit,
+					$this->internalOffset + $this->internalLimit,
+					$this->internalQueryString
+				));
 				break;
 		}
 
@@ -213,7 +269,7 @@ class Checklist extends Model
 		$st = $pdo->prepare($query);
 		$st->execute($this->internalWhereBindValues);
 		if ($st = $st->fetch(PDO::FETCH_NUM)) {
-			return $st[0];
+			return $this->internalTotal = $st[0];
 		}
 		return 0;
 	}
