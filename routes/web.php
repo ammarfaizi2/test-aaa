@@ -91,7 +91,7 @@ $router->post('/checklists', function (Request $request) {
 			$itemObj->task_id = $data["data"]["attributes"]["task_id"];
 			$itemObj->save();
 		}
-		unset($items);
+		unset($items, $item, $itemObj);
 		$ret = [
 			"data" => [
 				"type" => "checklists",
