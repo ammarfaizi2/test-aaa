@@ -48,6 +48,9 @@ class ChecklistsTest extends TestCase
 		$checklist = ["data" => ["attributes" => $checklist]];
 		$this->json('POST', '/checklists', $checklist, ['Authorization' => TEST_TOKEN]);
 
+		// // Debug here
+		// dd($this->response);
+
 		// Make sure that the http response code is 200 OK
 		$this->assertEquals($this->response->status(), 200);
 

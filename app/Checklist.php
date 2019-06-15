@@ -37,9 +37,37 @@ class Checklist extends Model
 	}
 
 	/**
-	 * @param string
+	 * @override {partial override}
+	 * @fallback parent::__call
+	 * @param string $methodName
+	 * @param array  $parameters
+	 * @return mixed
 	 */
-	public function setInternalWhereClause()
+	public function __call($methodName, $parameters)
+	{
+		switch ($methodName) {
+			case 'getFirstLink':
+				return 'fisrt_link';
+				break;
+			case 'getLastLink':
+				return 'last_link';
+				break;
+			case 'getNextLink':
+				return 'next_link';
+				break;
+			case 'getBackLink':
+				return 'back_link';
+				break;
+		}
+
+		return parent::__call($methodName, $parameters);
+	}
+
+	/**
+	 * @param string
+	 * @return void
+	 */
+	public function setInternalWhereClause(): void
 	{
 	}
 
@@ -58,30 +86,43 @@ class Checklist extends Model
 	}
 
 	/**
-	 * @override {partial override} parent::__call
-	 * @param string $methodName
-	 * @param array  $parameters
-	 * @return mixed
+	 * @return array
 	 */
-	public function __call(string $methodName, array $parameters)
+	public function getListOfChecklists(): array
 	{
+		$pdo = DB::getPdo();
+		$st = $pdo->prepare("SELECT * FROM checklists");
+		$st->execute();
+		$ret = [];
+		$retPtr = 0;
 
-		switch ($methodName) {
-			case 'getFirstLink':
-				return 'fisrt_link';
-				break;
-			case 'getLastLink':
+		__internal_pdo_fetch:
+		if ($r = $st->fetch(PDO::FETCH_ASSOC)) {
 
-				break;
-			case 'getNextLink':
+			// ISO 8601
+			foreach (["due", "created_at", "updated_at"] as $key) {
+				is_string($r[$key]) and $r[$key] = date('c', strtotime($r[$key]));
+			}
 
-				break;
-			case 'getBackLink':
+			$ret[$retPtr] = [
+				"type" => "checklists",
+				"id" => $r["id"],
+				"attributes" => $r,
+				"links" => [
+					"self" => sprintf("%s/api/v1/checklists/%s", env("APP_URL"), $r["id"])
+				]
+			];
 
-				break;
+			unset($ret[$retPtr]["attributes"]["id"]);
+
+			$retPtr++;
+			goto __internal_pdo_fetch;
 		}
 
-		return parent::__call($methodName, $parameters);
+		// // Debug here
+		// dd($ret);
+
+		return $ret;
 	}
 
 	/**

@@ -155,8 +155,11 @@ $router->get('/checklists', function (Request $request) {
 				"last" => $checklist->getLastLink(),
 				"next" => $checklist->getNextLink(),
 				"back" => $checklist->getBackLink()
-			]
+			],
+			"data" => $checklist->getListOfChecklists()
 		];
+
+		dd($ret);
 
 		return response()->json($ret, 200);
 	} catch (Error $e) {
