@@ -93,6 +93,18 @@ class ChecklistsTest extends TestCase
 
 	/**
 	 * @depends testCreateChecklist
+	 * @return void
+	 */
+	public function testGetListOfChecklists(): void
+	{
+		// Without any filter.
+		$this->json('GET', '/checklists', [], ['Authorization' => TEST_TOKEN]);
+
+		dd($this->response);
+	}
+
+	/**
+	 * @depends testCreateChecklist
 	 * @dataProvider checklistsToBeCreated
 	 * @param array $checklist
 	 * @return void

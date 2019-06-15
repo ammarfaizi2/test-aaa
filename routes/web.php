@@ -113,8 +113,55 @@ $router->patch("/checklists/{checklistId}", function ($checklistId, Request $req
 
 
 // Get list of checklists.
-$router->get('/checklists', function () {
+$router->get('/checklists', function (Request $request) {
+	try {
+		$limit = 10;
+		$offset = 0;
+		$sort = null;
+		$sortType = "asc";
+		$q = $request->all();
+		$checklist = new Checklist;
 
+		$availableFields = [];
+
+		if (isset($q["limit"]) && is_numeric($q["limit"])) {
+			$limit = (int)$q["limit"];
+		}
+
+		if (isset($q["offset"]) && is_numeric($q["offset"])) {
+			$offset = (int)$q["offset"];
+		}
+
+		if (isset($q["sort"]) && is_string($q["sort"]) && isset($q["sort"][0])) {
+			
+			if ($q["sort"][0] === "-") {
+				$sortType = "desc";
+				$q["sort"] = substr($q["sort"], 1);
+			}
+
+			if (!in_array($sort, $availableFields)) {
+				return response()->json(["status" => 400, 
+					"error" => sprintf("Sort error: %s is not a valid field", $q["sort"])], 400);
+			}
+		}
+
+		$ret = [
+			"meta" => [
+				"count" => 0,
+				"total" => $checklist->getTotalChecklist()
+			],
+			"links" => [
+				"first" => $checklist->getFirstLink(),
+				"last" => $checklist->getLastLink(),
+				"next" => $checklist->getNextLink(),
+				"back" => $checklist->getBackLink()
+			]
+		];
+
+		return response()->json($ret, 200);
+	} catch (Error $e) {
+		return response()->json(["status" => "500", "error" => "Server Error"], 500);
+	}
 });
 
 // This creates a Checklist object.

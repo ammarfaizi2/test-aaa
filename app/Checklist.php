@@ -2,6 +2,8 @@
 
 namespace App;
 
+use DB;
+use PDO;
 use Auth;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
@@ -32,6 +34,54 @@ class Checklist extends Model
 		}
 
 		$this->attributes['created_by'] = $user->id;
+	}
+
+	/**
+	 * @param string
+	 */
+	public function setInternalWhereClause()
+	{
+	}
+
+	/**
+	 * @return int
+	 */
+	public function getTotalChecklist(): int
+	{
+		$pdo = DB::getPdo();
+		$st = $pdo->prepare("SELECT COUNT(1) FROM checklists");
+		$st->execute();
+		if ($st = $st->fetch(PDO::FETCH_NUM)) {
+			return $st[0];
+		}
+		return 0;
+	}
+
+	/**
+	 * @override {partial override} parent::__call
+	 * @param string $methodName
+	 * @param array  $parameters
+	 * @return mixed
+	 */
+	public function __call(string $methodName, array $parameters)
+	{
+
+		switch ($methodName) {
+			case 'getFirstLink':
+				return 'fisrt_link';
+				break;
+			case 'getLastLink':
+
+				break;
+			case 'getNextLink':
+
+				break;
+			case 'getBackLink':
+
+				break;
+		}
+
+		return parent::__call($methodName, $parameters);
 	}
 
 	/**
