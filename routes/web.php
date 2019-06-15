@@ -296,10 +296,8 @@ $router->get("/checklists/{checklistId}/items", function ($checklistId, Request 
 			foreach ($checklist->items as $item) {
 				$ret["data"]["attributes"]["items"][] = $item->toArray();
 			}
-
-			dd($ret);
+			return response()->json($ret, 200);
 		}
-		dd($checklist);
 		return response()->json(["status" => "404", "error" => "Not Found"], 404);
 	} catch (Error $e) {
 		return response()->json(["status" => "500", "error" => "Server Error"], 500);
