@@ -13,6 +13,7 @@ class Item extends Model
      * @var array
      */
 	protected $fillable = [
+		'checklist_id', 'name', 'due', 'urgency', 'assignee_id', 'task_id'
 	];
 
 	/**
@@ -21,6 +22,15 @@ class Item extends Model
 	public function __construct()
 	{
 		parent::__construct();
+	}
+
+	/**
+	 * @param string $value
+	 * @return void
+	 */
+	public function setDueAttribute(string $value): void
+	{
+		$this->attributes['due'] = date("Y-m-d H:i:s", strtotime($value));
 	}
 
 	/**
