@@ -51,8 +51,8 @@ class ChecklistsTest extends TestCase
 		// // Debug here
 		// dd($this->response);
 
-		// Make sure that the http response code is 200 OK
-		$this->assertEquals($this->response->status(), 200);
+		// Make sure that the http response code is 201
+		$this->assertEquals($this->response->status(), 201);
 
 		// Make sure that the response is a JSON.
 		$this->assertTrue($this->response instanceof JsonResponse);
@@ -113,8 +113,11 @@ class ChecklistsTest extends TestCase
 	 */
 	public function testGetListOfChecklists(): void
 	{
-		// // Without any filter.
-		// $this->json('GET', '/checklists', [], ['Authorization' => TEST_TOKEN]);
+		// Without any filter.
+		$this->json('GET', '/checklists', [], ['Authorization' => TEST_TOKEN]);
+
+		// Make sure that the http response code is 200 OK
+		$this->assertEquals($this->response->status(), 200);
 
 
 		// Test filter
@@ -129,7 +132,10 @@ class ChecklistsTest extends TestCase
 		$this->json('GET', sprintf('/checklists?%s', http_build_query($query)),
 			[], ['Authorization' => TEST_TOKEN]);
 
-		dd($this->response);
+		// Make sure that the http response code is 200 OK
+		$this->assertEquals($this->response->status(), 200);
+
+		// dd($this->response);
 	}
 
 	/**

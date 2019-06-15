@@ -188,7 +188,8 @@ $router->get('/checklists', function (Request $request) {
 		];
 		unset($data);
 
-		dd($ret);
+		// // Debug here
+		// dd($ret);
 
 		return response()->json($ret, 200);
 	} catch (Error $e) {
@@ -228,8 +229,9 @@ $router->post('/checklists', function (Request $request) {
 		$checklist->created_by = Auth::user()->id;
 		$checklist->save();
 		$items = [];
-		foreach ($data["data"]["attributes"]["items"] as $item) {
+		foreach ($data["data"]["attributes"]["items"] as $kkk => $item) {
 			$itemObj = new Item();
+			$itemObj->item_id = $kkk + 1;
 			$itemObj->checklist_id = $checklist->id;
 			$itemObj->name = $item;
 			$itemObj->due = $data["data"]["attributes"]["due"];
@@ -263,8 +265,10 @@ $router->post('/checklists', function (Request $request) {
 		];
 		$ret["data"]["id"] = $ret["data"]["attributes"]["id"];
 		unset($ret["data"]["attributes"]["id"]);
-		return response()->json($ret, 200);
+		return response()->json($ret, 201);
 	} catch (Error $e) {
 		return response()->json(["status" => "500", "error" => "Server Error"], 500);
 	}	
 });
+
+
