@@ -142,9 +142,11 @@ $router->get('/checklists', function (Request $request) {
 				$q["sort"] = substr($q["sort"], 1);
 			}
 
+			$sort = $q["sort"];
+
 			if (!in_array($sort, $availableFields)) {
 				return response()->json(["status" => 400, 
-					"error" => sprintf("Sort error: %s is not a valid field", $q["sort"])], 400);
+					"error" => sprintf("Sort error: %s is not a valid field", $sort)], 400);
 			}
 		}
 
@@ -175,20 +177,21 @@ $router->get('/checklists', function (Request $request) {
 		$data = $checklist->getListOfChecklists();
 		$ret = [
 			"meta" => [
-				"count" => 0,
+				"count" => count($data),
 				"total" => $checklist->getTotalChecklist()
 			],
 			"links" => [
 				"first" => $checklist->getFirstLink(),
 				"last" => $checklist->getLastLink(),
 				"next" => $checklist->getNextLink(),
-				"back" => $checklist->getBackLink()
+				"prev" => $checklist->getPrevLink()
 			],
 			"data" => $data
 		];
 		unset($data);
 
-		dd($ret);
+		// // Debug here
+		// dd($ret);
 
 		return response()->json($ret, 200);
 	} catch (Error $e) {
@@ -228,8 +231,9 @@ $router->post('/checklists', function (Request $request) {
 		$checklist->created_by = Auth::user()->id;
 		$checklist->save();
 		$items = [];
-		foreach ($data["data"]["attributes"]["items"] as $item) {
+		foreach ($data["data"]["attributes"]["items"] as $kkk => $item) {
 			$itemObj = new Item();
+			$itemObj->item_id = $kkk + 1;
 			$itemObj->checklist_id = $checklist->id;
 			$itemObj->name = $item;
 			$itemObj->due = $data["data"]["attributes"]["due"];
@@ -263,8 +267,10 @@ $router->post('/checklists', function (Request $request) {
 		];
 		$ret["data"]["id"] = $ret["data"]["attributes"]["id"];
 		unset($ret["data"]["attributes"]["id"]);
-		return response()->json($ret, 200);
+		return response()->json($ret, 201);
 	} catch (Error $e) {
 		return response()->json(["status" => "500", "error" => "Server Error"], 500);
 	}	
 });
+
+

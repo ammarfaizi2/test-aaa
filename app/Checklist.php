@@ -141,7 +141,7 @@ class Checklist extends Model
 					$this->internalQueryString
 				));
 				break;
-			case 'getBackLink':
+			case 'getPrevLink':
 				return $this->internalOffset === 0 ? null :
 				sprintf("%s/checklists?%s", env("APP_URL"), $buildQuery(
 					$this->internalLimit,

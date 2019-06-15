@@ -13,7 +13,7 @@ class Item extends Model
      * @var array
      */
 	protected $fillable = [
-		'checklist_id', 'name', 'due', 'urgency', 'assignee_id', 'task_id'
+		'item_id', 'checklist_id', 'name', 'due', 'urgency', 'assignee_id', 'task_id'
 	];
 
 	/**

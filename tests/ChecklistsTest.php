@@ -51,8 +51,8 @@ class ChecklistsTest extends TestCase
 		// // Debug here
 		// dd($this->response);
 
-		// Make sure that the http response code is 200 OK
-		$this->assertEquals($this->response->status(), 200);
+		// Make sure that the http response code is 201
+		$this->assertEquals($this->response->status(), 201);
 
 		// Make sure that the response is a JSON.
 		$this->assertTrue($this->response instanceof JsonResponse);
@@ -92,6 +92,19 @@ class ChecklistsTest extends TestCase
 		];
 
 		$this->assertTrue($this->assertRules($json, $rules));
+
+		// Date time format ISO 8601
+		foreach (["created_at", "updated_at", "completed_at", "due"] as $key) {
+			if (isset($checklist["data"]["attributes"][$key])) {
+				$this->assertTrue((bool)
+					// \S means PCRE study.
+					preg_match(
+						"/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+\d{2}:\d{2}$/S",
+						$checklist["data"]["attributes"][$key]
+					)
+				);
+			}
+		}
 	}
 
 	/**
@@ -100,11 +113,28 @@ class ChecklistsTest extends TestCase
 	 */
 	public function testGetListOfChecklists(): void
 	{
-		// // Without any filter.
-		// $this->json('GET', '/checklists', [], ['Authorization' => TEST_TOKEN]);
+
+		$rules = [
+			"meta.count" => "numeric",
+			"meta.total" => "numeric",
+			"links.first" => "string",
+			"links.last" => null,
+			"links.next" => null,
+			"links.prev" => null,
+			"data" => "array",
+		];
 
 
-		// Test filter
+		// Without any filter.
+		$this->json('GET', '/checklists', [], ['Authorization' => TEST_TOKEN]);
+
+		// Make sure that the http response code is 200 OK
+		$this->assertEquals($this->response->status(), 200);
+
+		$json = $this->response->original;
+		$this->assertTrue($this->assertRules($json, $rules));
+
+		// Test with filter
 		$query = [
 			"filter" => [
 				"description" => [
@@ -113,10 +143,55 @@ class ChecklistsTest extends TestCase
 			]
 		];
 
-		$this->json('GET', sprintf('/checklists?%s', http_build_query($query)),
-			[], ['Authorization' => TEST_TOKEN]);
+		$this->json('GET', sprintf('/checklists?%s', 
+			http_build_query($query)), [], ['Authorization' => TEST_TOKEN]);
 
-		dd($this->response);
+		// Make sure that the http response code is 200 OK
+		$this->assertEquals($this->response->status(), 200);
+
+		$json = $this->response->original;
+		$this->assertTrue($this->assertRules($json, $rules));
+
+
+		// Test with sort
+		$query = [
+			"sort" => "-urgency"
+		];
+
+		$this->json('GET', sprintf('/checklists?%s', 
+			http_build_query($query)), [], ['Authorization' => TEST_TOKEN]);
+
+		// // Debug here
+		// dd($this->response);
+
+		// Make sure that the http response code is 200 OK
+		$this->assertEquals($this->response->status(), 200);
+
+		$json = $this->response->original;
+		$this->assertTrue($this->assertRules($json, $rules));
+
+		// WARNING:
+		// Please check this manually from your end!!!
+		// function "checklistsToBeCreated" must have at least 2 records
+		// in contiguos order with different urgency, so that the
+		// desc or asc sort can be proved in this section.
+
+		// DESC sort
+		$this->assertTrue(count($json["data"]) > 1);
+		$this->assertTrue(
+			$json["data"][0]["attributes"]["urgency"] > $json["data"][1]["attributes"]["urgency"]
+		);
+
+		$query["sort"] = "urgency";
+		$this->json('GET', sprintf('/checklists?%s', 
+			http_build_query($query)), [], ['Authorization' => TEST_TOKEN]);
+		$json = $this->response->original;
+
+		// ASC sort
+		$this->assertTrue(count($json["data"]) > 1);
+		$this->assertTrue(
+			$json["data"][0]["attributes"]["urgency"] < $json["data"][1]["attributes"]["urgency"]
+		);
 	}
 
 	/**
@@ -160,6 +235,19 @@ class ChecklistsTest extends TestCase
 		];
 
 		$this->assertTrue($this->assertRules($json, $rules));
+
+		// Date time format ISO 8601
+		foreach (["created_at", "updated_at", "completed_at", "due"] as $key) {
+			if (isset($checklist["data"]["attributes"][$key])) {
+				$this->assertTrue((bool)
+					// \S means PCRE study.
+					preg_match(
+						"/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+\d{2}:\d{2}$/S",
+						$checklist["data"]["attributes"][$key]
+					)
+				);
+			}
+		}
 
 		$id++;
 	}
@@ -220,6 +308,19 @@ class ChecklistsTest extends TestCase
 		];
 
 		$this->assertTrue($this->assertRules($json, $rules));
+
+		// Date time format ISO 8601
+		foreach (["created_at", "updated_at", "completed_at", "due"] as $key) {
+			if (isset($checklist["data"]["attributes"][$key])) {
+				$this->assertTrue((bool)
+					// \S means PCRE study.
+					preg_match(
+						"/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+\d{2}:\d{2}$/S",
+						$checklist["data"]["attributes"][$key]
+					)
+				);
+			}
+		}
 
 		$id++;
 	}

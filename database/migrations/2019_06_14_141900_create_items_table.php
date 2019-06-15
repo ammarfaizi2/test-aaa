@@ -15,6 +15,7 @@ class CreateItemsTable extends Migration
     {
         Schema::create('items', function (Blueprint $table) {
             $table->bigIncrements('id');
+            $table->unsignedBigInteger('item_id');
             $table->unsignedBigInteger('checklist_id');
             $table->string('name');
             $table->dateTime('due')->nullable();
