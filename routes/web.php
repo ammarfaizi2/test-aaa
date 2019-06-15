@@ -33,14 +33,12 @@ $router->get("/checklists/{checklistId}", function ($checklistId) {
 						]
 					)->toArray(),
 					"links" => [
-						"self" => sprintf("%s/api/v1/checklists/%d", 
-						env("APP_URL"), $r->id)
+						"self" => sprintf("%s/api/v1/checklists/%d", env("APP_URL"), $r->id)
 					]
 				]
 			];
 			$ret["data"]["id"] = $ret["data"]["attributes"]["id"];
 			unset($ret["data"]["attributes"]["id"]);
-			dd($ret);
 			return response()->json($ret, 200);
 		}
 		return response()->json(["status" => "404", "error" => "Not Found"], 404);
@@ -78,8 +76,9 @@ $router->post('/checklists', function (Request $request) {
 						"updated_by"
 					]
 				)->toArray(),
-				"links" => sprintf("%s/api/v1/checklists/%d", 
-					env("APP_URL"), $checklist->id)
+				"links" => [
+					"self" => sprintf("%s/api/v1/checklists/%d", env("APP_URL"), $checklist->id)
+				]
 			]
 		];
 		$ret["data"]["id"] = $ret["data"]["attributes"]["id"];

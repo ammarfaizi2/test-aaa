@@ -12,6 +12,8 @@ use Illuminate\Http\JsonResponse;
  */
 class ChecklistsTest extends TestCase
 {
+	use DataRules;
+
 	/**
 	 * @return void
 	 */
@@ -56,59 +58,29 @@ class ChecklistsTest extends TestCase
 
 		// Make sure that the JSON has the same pattern and data type with
 		// https://kw-checklist.docs.stoplight.io/api-reference/checklists/post-checklists
+		$rules = [
+			"data" => "array",
+			"data.type" => "string",
+			"data.id" => "numeric",
+			"data.attributes" => "array",
+			"data.attributes.object_domain" => "string",
+			"data.attributes.object_id" => "numeric",
+			"data.attributes.description" => "string",
+			"data.attributes.is_completed" => "boolean",
+			"data.attributes.due" => "NULL",
+			"data.attributes.urgency" => "numeric",
+			"data.attributes.completed_at" => "NULL",
+			"data.attributes.updated_by" => "NULL",
+			"data.attributes.created_by" => "numeric",
+			"data.attributes.created_at" => "string",
+			"data.attributes.updated_at" => "string",
+			"data.links" => "array",
+			"data.links.self" => ["string", function (string $value) {
+				return filter_var($value, FILTER_VALIDATE_URL);
+			}]
+		];
 
-		$this->assertTrue(isset($json["data"]["type"]) && is_string($json["data"]["type"]));
-		$this->assertTrue(isset($json["data"]["id"]) && is_numeric($json["data"]["id"]));
-		$this->assertTrue(
-			isset($json["data"]["attributes"]["object_domain"]) &&
-			is_string($json["data"]["attributes"]["object_domain"])
-		);
-		$this->assertTrue(
-			isset($json["data"]["attributes"]["object_id"]) &&
-			is_string($json["data"]["attributes"]["object_id"])
-		);
-		$this->assertTrue(
-			isset($json["data"]["attributes"]["task_id"]) &&
-			is_string($json["data"]["attributes"]["task_id"])
-		);
-		$this->assertTrue(
-			isset($json["data"]["attributes"]["description"]) &&
-			is_string($json["data"]["attributes"]["description"])
-		);
-		$this->assertTrue(
-			isset($json["data"]["attributes"]["is_completed"]) &&
-			$json["data"]["attributes"]["is_completed"] === false
-		);
-		$this->assertTrue(
-			isset($json["data"]["attributes"]["due"]) &&
-			is_string($json["data"]["attributes"]["due"])
-		);
-		$this->assertTrue(
-			isset($json["data"]["attributes"]["urgency"]) &&
-			is_numeric($json["data"]["attributes"]["urgency"])
-		);
-		$this->assertTrue(
-			// isset doesn't work with null value
-			// so here we use array_key_exists instead.
-			array_key_exists("completed_at", $json["data"]["attributes"]) &&
-			is_null($json["data"]["attributes"]["completed_at"])
-		);
-		$this->assertTrue(
-			array_key_exists("updated_by", $json["data"]["attributes"]) &&
-			is_null($json["data"]["attributes"]["updated_by"])
-		);
-		$this->assertTrue(
-			isset($json["data"]["attributes"]["created_by"]) &&
-			is_numeric($json["data"]["attributes"]["created_by"])
-		);
-		$this->assertTrue(
-			isset($json["data"]["attributes"]["created_at"]) &&
-			is_string($json["data"]["attributes"]["created_at"])
-		);
-		$this->assertTrue(
-			isset($json["data"]["attributes"]["updated_at"]) &&
-			is_string($json["data"]["attributes"]["updated_at"])
-		);
+		$this->assertTrue($this->assertRules($json, $rules));
 	}
 
 	/**
@@ -130,8 +102,6 @@ class ChecklistsTest extends TestCase
 		$this->assertTrue(isset($json["data"]["type"]) && is_string($json["data"]["type"]));
 		$this->assertTrue(isset($json["data"]["id"]) && is_numeric($json["data"]["id"]));
 		$this->assertEquals($json["data"]["id"], $id);
-
-		dd($this->response);
 		$id++;
 	}
 
