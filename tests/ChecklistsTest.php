@@ -113,29 +113,6 @@ class ChecklistsTest extends TestCase
 	 */
 	public function testGetListOfChecklists(): void
 	{
-		// Without any filter.
-		$this->json('GET', '/checklists', [], ['Authorization' => TEST_TOKEN]);
-
-		// Make sure that the http response code is 200 OK
-		$this->assertEquals($this->response->status(), 200);
-
-
-		// Test filter
-		$query = [
-			"filter" => [
-				"description" => [
-					"like" => "*pick up*"
-				]
-			]
-		];
-
-		$this->json('GET', sprintf('/checklists?%s', http_build_query($query)),
-			[], ['Authorization' => TEST_TOKEN]);
-
-		// Make sure that the http response code is 200 OK
-		$this->assertEquals($this->response->status(), 200);
-
-		$json = $this->response->original;
 
 		$rules = [
 			"meta.count" => "numeric",
@@ -147,7 +124,66 @@ class ChecklistsTest extends TestCase
 			"data" => "array",
 		];
 
+
+		// Without any filter.
+		$this->json('GET', '/checklists', [], ['Authorization' => TEST_TOKEN]);
+
+		// Make sure that the http response code is 200 OK
+		$this->assertEquals($this->response->status(), 200);
+
+		$json = $this->response->original;
 		$this->assertTrue($this->assertRules($json, $rules));
+
+		// Test with filter
+		$query = [
+			"filter" => [
+				"description" => [
+					"like" => "*pick up*"
+				]
+			]
+		];
+
+		$this->json('GET', sprintf('/checklists?%s', 
+			http_build_query($query)), [], ['Authorization' => TEST_TOKEN]);
+
+		// Make sure that the http response code is 200 OK
+		$this->assertEquals($this->response->status(), 200);
+
+		$json = $this->response->original;
+		$this->assertTrue($this->assertRules($json, $rules));
+
+
+		// Test with sort
+		$query = [
+			"sort" => "-urgency"
+		];
+
+		$this->json('GET', sprintf('/checklists?%s', 
+			http_build_query($query)), [], ['Authorization' => TEST_TOKEN]);
+
+		// Make sure that the http response code is 200 OK
+		$this->assertEquals($this->response->status(), 200);
+
+		$json = $this->response->original;
+		$this->assertTrue($this->assertRules($json, $rules));
+
+		// WARNING:
+		// Please check this manually from your end!!!
+		// function "checklistsToBeCreated" must have at least 2 records 
+		// with different urgency, so that the desc or asc sort can 
+		// be proved in this section.
+
+		// DESC sort
+		$this->assertTrue(count($json["data"] > 1));
+		$this->assertTrue($json["data"][0]["urgency"] > $json["data"][1]["urgency"]);
+
+		$query["sort"] = "urgency";
+		$this->json('GET', sprintf('/checklists?%s', 
+			http_build_query($query)), [], ['Authorization' => TEST_TOKEN]);
+
+		// ASC sort
+		$this->assertTrue(count($json["data"] > 1));
+		$this->assertTrue($json["data"][0]["urgency"] < $json["data"][1]["urgency"]);
 	}
 
 	/**
