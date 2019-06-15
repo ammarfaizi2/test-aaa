@@ -346,13 +346,21 @@ class ChecklistsTest extends TestCase
 
 	/**
 	 * @depends testDeleteChecklist
+	 * @return void
+	 */
+	public function testDeleteEpilogue()
+	{
+		$this->testCleanUp();
+	}
+
+	/**
+	 * @depends testDeleteEpilogue
 	 * @dataProvider checklistsToBeCreated
 	 * @param array $checklist
 	 * @return void
 	 */
 	public function testRecreateAfterDelete(array $checklist): void
 	{
-		$this->testCleanUp();
 		$this->testCreateChecklist($checklist);
 	}
 

@@ -20,10 +20,10 @@ trait DataRules
 			$key = explode('.', $key);
 			$ptrVal = null;
 
-			// // Debug here
-			// if (!$this->internalIndexCheck($array, $key, $ptrVal)) {
-			// 	dd($array, $key, $ptrVal);
-			// }
+			// Debug here
+			if (!$this->internalIndexCheck($array, $key, $ptrVal)) {
+				dd($array, $key, $ptrVal);
+			}
 
 			$this->assertTrue((bool)$this->internalIndexCheck($array, $key, $ptrVal));
 			if (is_array($rule) && ($rule[1] instanceof Closure)) {

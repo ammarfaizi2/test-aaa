@@ -28,6 +28,7 @@ class ItemsTest extends TestCase
 	{
 		static $id = 1;
 
+		// Without filter.
 		$this->json('GET', sprintf('/checklists/%d/items', $id), [], ['Authorization' => TEST_TOKEN]);
 
 		// // Debug here

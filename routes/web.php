@@ -285,7 +285,7 @@ $router->get("/checklists/{checklistId}/items", function ($checklistId, Request 
 						[
 							"completed_at",
 							"is_completed",
-							"updated_by"
+							"last_update_by"
 						]
 					)->toArray(),
 					"links" => [
