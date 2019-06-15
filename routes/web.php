@@ -168,7 +168,7 @@ $router->get('/checklists', function (Request $request) {
 		}
 
 		$checklist->setInternalLimit($limit);
-		$checklist->setInternalOffset($limit);
+		$checklist->setInternalOffset($offset);
 		is_string($sort) and $checklist->setInternalSort($sort, $sortType);
 
 		$ret = [

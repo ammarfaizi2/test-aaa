@@ -234,7 +234,7 @@ class Checklist extends Model
 		
 
 		// // Debug here
-		// dd($query);
+		// dd($query, $this->internalWhereBindValues);
 
 		$pdo = DB::getPdo();
 		$st = $pdo->prepare($query);
