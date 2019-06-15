@@ -9,6 +9,7 @@ abstract class TestCase extends Laravel\Lumen\Testing\TestCase
      */
     public function createApplication()
     {
+    	define("TEST_TOKEN", "1LQxW0CjRz8ZaY1GvOxoCuHlNS7oecmQxEYJ4V/Fpd+WmfeUOwRVhw==");
         return require __DIR__.'/../bootstrap/app.php';
     }
 }

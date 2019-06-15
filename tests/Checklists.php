@@ -1,16 +1,17 @@
 <?php
 
-namespace tests\Checklists;
-
-define("TEST_TOKEN", "1LQxW0CjRz8ZaY1GvOxoCuHlNS7oecmQxEYJ4V/Fpd+WmfeUOwRVhw==");
+namespace Tests;
 
 use DB;
 use TestCase;
 use Illuminate\Http\JsonResponse;
 
-class APITest extends TestCase
+/**
+ * @author Ammar Faizi <ammarfaizi2@gmail.com>
+ * @package \Tests
+ */
+class Checklists extends TestCase
 {
-
 	/**
 	 * @return void
 	 */
@@ -31,11 +32,12 @@ class APITest extends TestCase
 	}
 
 	/**
-	 *
+	 * @return void
 	 */
-	public function testGetChecklist()
+	public function testGetChecklist(): void
 	{
-		
+		$this->json('GET', '/checklists/1', [], ['Authorization' => TEST_TOKEN]);
+		// dd($this->response);
 	}
 
 	/**

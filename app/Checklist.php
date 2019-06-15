@@ -33,15 +33,6 @@ class Checklist extends Model
 	}
 
 	/**
-	 * @param string $value
-	 * @return bool
-	 */
-	public function getIsCompletedAttribute(string $value): bool
-	{
-		return $value == '1' ? true : false;
-	}
-
-	/**
 	 * @param string value
 	 * @return string
 	 */
@@ -78,17 +69,9 @@ class Checklist extends Model
 	}
 
 	/**
-	 * @return bool
-	 */
-	public function isCompleted(): bool
-	{
-		return false;
-	}
-
-	/**
 	 * @return int|null
 	 */
-	public function getUpdatedBy(): ?int
+	public function getUpdatedByAttribute(): ?int
 	{
 		return null;
 	}
@@ -96,9 +79,26 @@ class Checklist extends Model
 	/**
 	 * @return string|null
 	 */
-	public function getCompletedAt(): ?string
+	public function getCompletedAtAttribute(): ?string
 	{
 		return null;
+	}
+
+	/**
+	 * @return string|null
+	 */
+	public function getLastUpdateByAttribute(): ?string
+	{
+		return $this->getUpdatedByAttribute();
+	}
+
+	/**
+	 * @param string $value
+	 * @return bool
+	 */
+	public function getIsCompletedAttribute(): bool
+	{
+		return false;
 	}
 
 	/**
