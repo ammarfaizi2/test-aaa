@@ -108,7 +108,7 @@ class ChecklistsTest extends TestCase
 		$query = [
 			"filter" => [
 				"description" => [
-					"like" => "*pickup*"
+					"like" => "*pick up*"
 				]
 			]
 		];
