@@ -111,6 +111,13 @@ $router->patch("/checklists/{checklistId}", function ($checklistId, Request $req
 	}
 });
 
+
+// Get list of checklists.
+$router->get('/checklists', function () {
+
+});
+
+// This creates a Checklist object.
 $router->post('/checklists', function (Request $request) {
 	try {
 		$this->validate($request, [
