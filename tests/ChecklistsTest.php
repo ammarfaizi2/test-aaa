@@ -330,8 +330,12 @@ class ChecklistsTest extends TestCase
 		$id++;
 	}
 
+	// Please note that "@depends" is different with "@Depends"
+	// You can see the discussion about this issue here
+	// https://github.com/sebastianbergmann/phpunit/issues/2647#issuecomment-486186376
+
 	/**
-	 * @depends testUpdateChecklist
+	 * @Depends \Tests\ItemsTest::testUpdateChecklist
 	 * @dataProvider checklistsToBeCreated
 	 * @param array $checklist
 	 * @return void

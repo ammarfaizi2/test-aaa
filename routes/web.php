@@ -274,3 +274,18 @@ $router->post('/checklists', function (Request $request) {
 });
 
 
+$router->get("/checklists/{checklistId}/items", function ($checklistId, Request $request) {
+	try {
+		if ($checklist = Checklist::find($checklistId)) {
+			$ret = [];
+			foreach ($checklists->items as $item) {
+				$ret[] = $item;
+			}
+
+			dd($ret);
+		}
+		return response()->json(["status" => "404", "error" => "Not Found"], 404);
+	} catch (Error $e) {
+		return response()->json(["status" => "500", "error" => "Server Error"], 500);
+	}
+});
