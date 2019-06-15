@@ -118,11 +118,14 @@ $router->get('/checklists', function (Request $request) {
 		$limit = 10;
 		$offset = 0;
 		$sort = null;
-		$sortType = "asc";
+		$sortType = "ASC";
 		$q = $request->all();
 		$checklist = new Checklist;
 
-		$availableFields = [];
+		$availableFields = [
+			"object_domain", "object_id", "task_id", "description", "due",
+			"urgency", "updated_by", "created_by", "created_at", "updated_at"
+		];
 
 		if (isset($q["limit"]) && is_numeric($q["limit"])) {
 			$limit = (int)$q["limit"];
@@ -135,7 +138,7 @@ $router->get('/checklists', function (Request $request) {
 		if (isset($q["sort"]) && is_string($q["sort"]) && isset($q["sort"][0])) {
 			
 			if ($q["sort"][0] === "-") {
-				$sortType = "desc";
+				$sortType = "DESC";
 				$q["sort"] = substr($q["sort"], 1);
 			}
 
@@ -144,6 +147,29 @@ $router->get('/checklists', function (Request $request) {
 					"error" => sprintf("Sort error: %s is not a valid field", $q["sort"])], 400);
 			}
 		}
+
+		if (isset($q["filter"])) {
+			foreach ($q["filter"] as $key => $value) {
+				if (!in_array($key, $availableFields)) {
+					return response()->json(["status" => 400, 
+						"error" => sprintf("Filter error: %s is not a valid field", $q["sort"])], 400);
+				}
+				foreach ($value as $vkey => $vvalue) {
+					$checklist->setInternalWhereClause($key, $vkey, $vvalue);
+				}
+			}
+
+			try {
+				$checklist->buildInternalWhereClause();	
+			} catch (Exception $e) {
+				return response()->json(
+					["status" => "400", "error" => sprintf("Filter error: %s", $e->getMessage())], 400);
+			}
+		}
+
+		$checklist->setInternalLimit($limit);
+		$checklist->setInternalOffset($limit);
+		is_string($sort) and $checklist->setInternalSort($sort, $sortType);
 
 		$ret = [
 			"meta" => [
@@ -163,6 +189,10 @@ $router->get('/checklists', function (Request $request) {
 
 		return response()->json($ret, 200);
 	} catch (Error $e) {
+
+		// Debug here
+		dd($e->getMessage());
+
 		return response()->json(["status" => "500", "error" => "Server Error"], 500);
 	}
 });
