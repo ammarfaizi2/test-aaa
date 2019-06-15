@@ -127,6 +127,21 @@ class ChecklistsTest extends TestCase
 
 
 	/**
+	 * @depends testGetChecklist
+	 * @dataProvider checklistsToBeCreated
+	 * @param array $checklist
+	 * @return void
+	 */
+	public function testDeleteChecklist()
+	{
+		static $id = 1;
+		$this->json('DELETE', sprintf('/checklists/%d', $id), [], ['Authorization' => TEST_TOKEN]);
+		$this->assertEquals($this->response->status(), 204);
+		$id++;
+	}
+
+
+	/**
 	 * @return array
 	 */
 	public function checklistsToBeCreated(): array
