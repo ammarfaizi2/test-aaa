@@ -238,7 +238,7 @@ class Checklist extends Model
 
 		$pdo = DB::getPdo();
 		$st = $pdo->prepare($query);
-		$st->execute();
+		$st->execute($this->internalWhereBindValues);
 		$ret = [];
 		$retPtr = 0;
 
