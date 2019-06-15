@@ -48,11 +48,52 @@ $router->get("/checklists/{checklistId}", function ($checklistId) {
 	}
 });
 
-$router->delete("/checklists/{checklistId}", function ($checklistId) {
+$router->delete("/checklists/{checklistId}", function ($checklistId, Request $request) {
 	try {
+
+		$this->validate($request, [
+	        'data' => 'required',
+	        'data.attributes' => 'required',
+	        'data.attributes.object_domain' => 'required',
+	        'data.attributes.object_id' => 'required',
+	        'data.attributes.description' => 'required',
+	        'data.attributes.due' => 'date',
+	        'data.attributes.items' => 'required|array'
+	    ]);
+
 		if ($r = Checklist::find($checklistId)) {
 			$r->delete();
 			return response(null, 204);
+		}
+		return response()->json(["status" => "404", "error" => "Not Found"], 404);
+	} catch (Error $e) {
+		return response()->json(["status" => "500", "error" => "Server Error"], 500);
+	}
+});
+
+$router->patch("/checklists/{checklistId}", function ($checklistId) {
+	try {
+		if ($r = Checklist::find($checklistId)) {
+			$r->save();
+			$ret = [
+				"data" => [
+					"type" => "checklists",
+					"id" => $checklist->id,
+					"attributes" => $checklist->setAppends(
+						[
+							"completed_at",
+							"is_completed",
+							"updated_by"
+						]
+					)->toArray(),
+					"links" => [
+						"self" => sprintf("%s/api/v1/checklists/%d", env("APP_URL"), $checklist->id)
+					]
+				]
+			];
+			$ret["data"]["id"] = $ret["data"]["attributes"]["id"];
+			unset($ret["data"]["attributes"]["id"]);
+			return response()->json($ret, 200);
 		}
 		return response()->json(["status" => "404", "error" => "Not Found"], 404);
 	} catch (Error $e) {
