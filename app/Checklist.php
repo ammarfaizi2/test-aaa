@@ -2,6 +2,8 @@
 
 namespace App;
 
+use DB;
+use PDO;
 use Auth;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
@@ -20,6 +22,51 @@ class Checklist extends Model
 	protected $primaryKey = "id";
 
 	/**
+	 * @var string|array
+	 */
+	private $internalWhereClause = [];
+
+	/**
+	 * @var array
+	 */
+	private $internalWhereBindValues = [];
+
+	/**
+	 * @var int
+	 */
+	private $bindPointer = 0;
+
+	/**
+	 * @var int
+	 */
+	private $internalLimit = 10;
+
+	/**
+	 * @var int
+	 */
+	private $internalOffset = 0;
+
+	/**
+	 * @var string
+	 */
+	private $internalSort = "id";
+
+	/**
+	 * @var string
+	 */
+	private $internalSortType = "ASC";
+
+	/**
+	 * @var int
+	 */
+	private $internalTotal = 0;
+
+	/**
+	 * @var array
+	 */
+	private $internalQueryString = [];
+
+	/**
 	 * Constructor.
 	 */
 	public function __construct()
@@ -32,6 +79,252 @@ class Checklist extends Model
 		}
 
 		$this->attributes['created_by'] = $user->id;
+	}
+
+	/**
+	 * @param array $query
+	 * @return void
+	 */
+	public function setInternalQueryString(array $query): void
+	{
+		$this->internalQueryString = $query;
+	}
+
+	/**
+	 * @override {partial override}
+	 * @fallback parent::__call
+	 * @param string $methodName
+	 * @param array  $parameters
+	 * @return mixed
+	 */
+	public function __call($methodName, $parameters)
+	{
+		$buildQuery = function ($limit, $offset, $opt = []) {
+			return str_replace(["%5B", "%5D"], ["[", "]"],
+				http_build_query(
+				array_merge([
+					"page" => [
+						"limit" => $limit,
+						"offset" => $offset
+					]
+				], $opt)
+			));
+		};
+
+		switch ($methodName) {
+			case 'getFirstLink':
+				return sprintf("%s/checklists?%s", env("APP_URL"), $buildQuery(
+					$this->internalLimit,
+					0,
+					$this->internalQueryString
+				));
+				break;
+			case 'getLastLink':
+				return sprintf("%s/checklists?%s", env("APP_URL"), $buildQuery(
+					$this->internalLimit,
+					$this->internalTotal === 0 ? 0 :
+					(
+						($this->internalLimit >= $this->internalTotal) ? 0 :
+						(int)ceil($this->internalTotal / $this->internalLimit)
+					),
+					$this->internalQueryString
+				));
+				break;
+			case 'getNextLink':
+
+				$offset = $this->internalTotal === 0 ? 0 :
+					(int)ceil($this->internalTotal / $this->internalLimit);
+
+				return $offset < $this->internalLimit ? null :
+				sprintf("%s/checklists?%s", env("APP_URL"), $buildQuery(
+					$this->internalLimit,
+					$this->internalQueryString
+				));
+				break;
+			case 'getBackLink':
+				return $this->internalOffset === 0 ? null :
+				sprintf("%s/checklists?%s", env("APP_URL"), $buildQuery(
+					$this->internalLimit,
+					$this->internalOffset + $this->internalLimit,
+					$this->internalQueryString
+				));
+				break;
+		}
+
+		return parent::__call($methodName, $parameters);
+	}
+
+	/**
+	 * @param string $field
+	 * @param string $operation
+	 * @param string $value
+	 * @return void
+	 */
+	public function setInternalWhereClause(string $field, string $operation, string $value): void
+	{
+		$boundary = sprintf(":value_%d", $this->bindPointer);
+		$this->internalWhereClause[$this->bindPointer] = [
+			"boundary" => $boundary,
+			"op" => $operation,
+			"field" => $field
+		];
+		$this->internalWhereBindValues[$boundary] = $value;
+		$this->bindPointer++;
+
+		// // Debug here
+		// dd($this->internalWhereClause, $this->internalWhereBindValues);
+	}
+
+	/**
+	 * @param int $limit
+	 * @return void
+	 */
+	public function setInternalLimit(int $limit): void
+	{
+		$this->internalLimit = $limit;
+	}
+
+	/**
+	 * @param int $offset
+	 * @return void
+	 */
+	public function setInternalOffset(int $offset): void
+	{
+		$this->internalOffset = $offset;
+	}
+
+	/**
+	 * @param string $field
+	 * @param string $sortType
+	 * @return void
+	 */
+	public function setInternalSort(string $field, string $sortType): void
+	{
+		$this->internalSort = $field;
+		$this->internalSortType = $sortType;
+	}
+
+	/**
+	 * @throws \Exception
+	 * @return void
+	 */
+	public function buildInternalWhereClause(): void
+	{
+		$clause = "WHERE ";
+		foreach ($this->internalWhereClause as $key => $val) {
+			switch ($val["op"]) {
+				case 'like':
+					$op = "LIKE";
+					$this->internalWhereBindValues[$val["boundary"]] = 
+						strpos($this->internalWhereBindValues[$val["boundary"]], "*") !== false ?
+							str_replace("*", "%", 
+								$this->internalWhereBindValues[$val["boundary"]]) :
+							sprintf("%c%s%c", 
+								"%", $this->internalWhereBindValues[$val["boundary"]], "%");
+				break;
+				case '!like':
+					$op = "NOT LIKE";
+					$this->internalWhereBindValues[$val["boundary"]] = 
+						strpos($this->internalWhereBindValues[$val["boundary"]], "*") !== false ?
+							str_replace("*", "%", 
+								$this->internalWhereBindValues[$val["boundary"]]) :
+							sprintf("%c%s%c", 
+								"%", $this->internalWhereBindValues[$val["boundary"]], "%");
+				break;
+				case 'is': $op = "="; break;
+				case '!is': $op = "!="; break;
+				case 'in': 
+					$op = "IN";
+				break;
+				case '!in':
+					$op = "NOT IN";
+				break;
+				default:
+					throw new Exception("Invalid operation {$val["op"]}");
+					break;
+			}
+			$clause .= sprintf(" (%s %s %s) AND", $val["field"], $op, $val["boundary"]);
+		}
+		$this->internalWhereClause = rtrim($clause, " AND");
+	}
+
+	/**
+	 * @return int
+	 */
+	public function getTotalChecklist(): int
+	{
+		$query = sprintf(
+			"SELECT COUNT(1) FROM checklists %s ORDER BY %s %s LIMIT %s OFFSET %s",
+			(is_string($this->internalWhereClause) ? $this->internalWhereClause : ""),
+			$this->internalSort,
+			$this->internalSortType,
+			$this->internalLimit,
+			$this->internalOffset
+		);
+
+		// // Debug here
+		// dd($query);
+
+		$pdo = DB::getPdo();
+		$st = $pdo->prepare($query);
+		$st->execute($this->internalWhereBindValues);
+		if ($st = $st->fetch(PDO::FETCH_NUM)) {
+			return $this->internalTotal = $st[0];
+		}
+		return 0;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getListOfChecklists(): array
+	{
+		$query = sprintf(
+			"SELECT * FROM checklists %s ORDER BY %s %s LIMIT %s OFFSET %s",
+			(is_string($this->internalWhereClause) ? $this->internalWhereClause : ""),
+			$this->internalSort,
+			$this->internalSortType,
+			$this->internalLimit,
+			$this->internalOffset
+		);
+		
+
+		// // Debug here
+		// dd($query, $this->internalWhereBindValues);
+
+		$pdo = DB::getPdo();
+		$st = $pdo->prepare($query);
+		$st->execute($this->internalWhereBindValues);
+		$ret = [];
+		$retPtr = 0;
+
+		__internal_pdo_fetch:
+		if ($r = $st->fetch(PDO::FETCH_ASSOC)) {
+
+			// ISO 8601
+			foreach (["due", "created_at", "updated_at"] as $key) {
+				is_string($r[$key]) and $r[$key] = date('c', strtotime($r[$key]));
+			}
+
+			$ret[$retPtr] = [
+				"type" => "checklists",
+				"id" => $r["id"],
+				"attributes" => $r,
+				"links" => [
+					"self" => sprintf("%s/api/v1/checklists/%s", env("APP_URL"), $r["id"])
+				]
+			];
+
+			unset($ret[$retPtr]["attributes"]["id"]);
+
+			$retPtr++;
+			goto __internal_pdo_fetch;
+		}
+
+		// // Debug here
+		// dd($ret);
+
+		return $ret;
 	}
 
 	/**

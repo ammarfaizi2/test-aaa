@@ -48,6 +48,9 @@ class ChecklistsTest extends TestCase
 		$checklist = ["data" => ["attributes" => $checklist]];
 		$this->json('POST', '/checklists', $checklist, ['Authorization' => TEST_TOKEN]);
 
+		// // Debug here
+		// dd($this->response);
+
 		// Make sure that the http response code is 200 OK
 		$this->assertEquals($this->response->status(), 200);
 
@@ -89,6 +92,31 @@ class ChecklistsTest extends TestCase
 		];
 
 		$this->assertTrue($this->assertRules($json, $rules));
+	}
+
+	/**
+	 * @depends testCreateChecklist
+	 * @return void
+	 */
+	public function testGetListOfChecklists(): void
+	{
+		// // Without any filter.
+		// $this->json('GET', '/checklists', [], ['Authorization' => TEST_TOKEN]);
+
+
+		// Test filter
+		$query = [
+			"filter" => [
+				"description" => [
+					"like" => "*pick up*"
+				]
+			]
+		];
+
+		$this->json('GET', sprintf('/checklists?%s', http_build_query($query)),
+			[], ['Authorization' => TEST_TOKEN]);
+
+		dd($this->response);
 	}
 
 	/**
@@ -225,6 +253,16 @@ class ChecklistsTest extends TestCase
 					"description" => "Need to verify this guy house. (updated)",
 					"task_id" => "123"
 				]
+			],
+			[
+				[
+					"object_domain" => "contact",
+					"object_id" => "1",
+					"due" => "2019-01-25T07:50:14+00:00",
+					"urgency" => 1,
+					"description" => "Need to pick up this guy. (updated)",
+					"task_id" => "123"
+				]
 			]
 		];
 	}
@@ -246,6 +284,21 @@ class ChecklistsTest extends TestCase
 						"Visit his house",
 						"Capture a photo",
 						"Meet him on the house"
+					],
+					"task_id" => "123"
+				]
+			],
+			[
+				[
+					"object_domain" => "contact",
+					"object_id" => "2",
+					"due" => "2019-01-25T07:50:14+00:00",
+					"urgency" => 3,
+					"description" => "Need to pick up this guy.",
+					"items" => [
+						"Go to his home",
+						"Meet him",
+						"Pick him up"
 					],
 					"task_id" => "123"
 				]

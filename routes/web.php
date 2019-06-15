@@ -113,8 +113,91 @@ $router->patch("/checklists/{checklistId}", function ($checklistId, Request $req
 
 
 // Get list of checklists.
-$router->get('/checklists', function () {
+$router->get('/checklists', function (Request $request) {
+	try {
+		$limit = 10;
+		$offset = 0;
+		$sort = null;
+		$sortType = "ASC";
+		$q = $request->all();
+		$checklist = new Checklist;
 
+		$availableFields = [
+			"object_domain", "object_id", "task_id", "description", "due",
+			"urgency", "updated_by", "created_by", "created_at", "updated_at"
+		];
+
+		if (isset($q["page"]["limit"]) && is_numeric($q["page"]["limit"])) {
+			$limit = (int)$q["page"]["limit"];
+		}
+
+		if (isset($q["page"]["offset"]) && is_numeric($q["page"]["offset"])) {
+			$offset = (int)$q["page"]["offset"];
+		}
+
+		if (isset($q["sort"]) && is_string($q["sort"]) && isset($q["sort"][0])) {
+			
+			if ($q["sort"][0] === "-") {
+				$sortType = "DESC";
+				$q["sort"] = substr($q["sort"], 1);
+			}
+
+			if (!in_array($sort, $availableFields)) {
+				return response()->json(["status" => 400, 
+					"error" => sprintf("Sort error: %s is not a valid field", $q["sort"])], 400);
+			}
+		}
+
+		if (isset($q["filter"])) {
+			foreach ($q["filter"] as $key => $value) {
+				if (!in_array($key, $availableFields)) {
+					return response()->json(["status" => 400, 
+						"error" => sprintf("Filter error: %s is not a valid field", $q["sort"])], 400);
+				}
+				foreach ($value as $vkey => $vvalue) {
+					$checklist->setInternalWhereClause($key, $vkey, $vvalue);
+				}
+			}
+
+			try {
+				$checklist->buildInternalWhereClause();	
+			} catch (Exception $e) {
+				return response()->json(
+					["status" => "400", "error" => sprintf("Filter error: %s", $e->getMessage())], 400);
+			}
+		}
+
+		$checklist->setInternalLimit($limit);
+		$checklist->setInternalOffset($offset);
+		is_string($sort) and $checklist->setInternalSort($sort, $sortType);
+		$checklist->setInternalQueryString($q);
+
+		$data = $checklist->getListOfChecklists();
+		$ret = [
+			"meta" => [
+				"count" => 0,
+				"total" => $checklist->getTotalChecklist()
+			],
+			"links" => [
+				"first" => $checklist->getFirstLink(),
+				"last" => $checklist->getLastLink(),
+				"next" => $checklist->getNextLink(),
+				"back" => $checklist->getBackLink()
+			],
+			"data" => $data
+		];
+		unset($data);
+
+		dd($ret);
+
+		return response()->json($ret, 200);
+	} catch (Error $e) {
+
+		// Debug here
+		dd($e->getMessage());
+
+		return response()->json(["status" => "500", "error" => "Server Error"], 500);
+	}
 });
 
 // This creates a Checklist object.
