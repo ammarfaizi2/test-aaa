@@ -19,11 +19,34 @@ $router->get('/', function () use ($router) {
 });
 
 $router->get("/checklists/{checklistId}", function ($checklistId) {
-	
-	if ($r = Checklist::where('id', $checklistId)->fisrt()) {
+	try {
+		if ($r = Checklist::find($checklistId)) {
+			$ret = [
+				"data" => [
+					"type" => "checklists",
+					"id" => $r->id,
+					"attributes" => $r->setAppends(
+						[
+							"completed_at",
+							"is_completed",
+							"last_update_by"
+						]
+					)->toArray(),
+					"links" => [
+						"self" => sprintf("%s/api/v1/checklists/%d", 
+						env("APP_URL"), $r->id)
+					]
+				]
+			];
+			$ret["data"]["id"] = $ret["data"]["attributes"]["id"];
+			unset($ret["data"]["attributes"]["id"]);
+			dd($ret);
+			return response()->json($ret, 200);
+		}
+		return response()->json(["status" => "404", "error" => "Not Found"], 404);
+	} catch (Error $e) {
+		return response()->json(["status" => "500", "error" => "Server Error"], 500);
 	}
-
-	return response()->json(["status" => "404", "error" => "Not Found"], 404);
 });
 
 $router->post('/checklists', function (Request $request) {

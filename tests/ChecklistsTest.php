@@ -10,14 +10,13 @@ use Illuminate\Http\JsonResponse;
  * @author Ammar Faizi <ammarfaizi2@gmail.com>
  * @package \Tests
  */
-class Checklists extends TestCase
+class ChecklistsTest extends TestCase
 {
 	/**
 	 * @return void
 	 */
-	public function setUp(): void
+	public function testCleanUp(): void
 	{
-		parent::setUp();
 		$pdo = DB::getPdo();
 
 		$queries = [
@@ -32,28 +31,19 @@ class Checklists extends TestCase
 	}
 
 	/**
-	 * @return void
-	 */
-	public function testGetChecklist(): void
-	{
-		$this->json('GET', '/checklists/1', [], ['Authorization' => TEST_TOKEN]);
-		// dd($this->response);
-	}
-
-	/**
+	 * @depends testCleanUp
 	 * @dataProvider checklistsToBeCreated
 	 * @param array $checklist
 	 * @return void
 	 */
-	public function testCreateChecklist($checklist): void
+	public function testCreateChecklist(array $checklist): void
 	{
 		$checklist = ["data" => ["attributes" => $checklist]];
 		$this->json('POST', '/checklists', $checklist, ['Authorization' => TEST_TOKEN]);
 
-		$json = $this->response->original;
-
 		// Make sure that the response is a JSON.
 		$this->assertTrue($this->response instanceof JsonResponse);
+		$json = $this->response->original;
 
 		// We don't need items attribute anymore.
 		unset($checklist["data"]["attributes"]["items"]);
@@ -119,6 +109,30 @@ class Checklists extends TestCase
 			isset($json["data"]["attributes"]["updated_at"]) &&
 			is_string($json["data"]["attributes"]["updated_at"])
 		);
+	}
+
+	/**
+	 * @depends testCreateChecklist
+	 * @dataProvider checklistsToBeCreated
+	 * @param array $checklist
+	 * @return void
+	 */
+	public function testGetChecklist(array $checklist): void
+	{
+		static $id = 1;
+		$this->json('GET', sprintf('/checklists/%d', $id), [], ['Authorization' => TEST_TOKEN]);
+
+		// Make sure that the response is a JSON.
+		$this->assertTrue($this->response instanceof JsonResponse);
+
+		$json = $this->response->original;
+
+		$this->assertTrue(isset($json["data"]["type"]) && is_string($json["data"]["type"]));
+		$this->assertTrue(isset($json["data"]["id"]) && is_numeric($json["data"]["id"]));
+		$this->assertEquals($json["data"]["id"], $id);
+
+		dd($this->response);
+		$id++;
 	}
 
 

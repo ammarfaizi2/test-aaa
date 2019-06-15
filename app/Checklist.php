@@ -17,6 +17,8 @@ class Checklist extends Model
 		'object_domain', 'object_id', 'due', 'urgency', 'description', 'items', 'task_id'
 	];
 
+	protected $primaryKey = "id";
+
 	/**
 	 * Constructor.
 	 */
