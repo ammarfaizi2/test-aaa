@@ -117,10 +117,15 @@ class ChecklistsTest extends TestCase
 		$rules = [
 			"meta.count" => "numeric",
 			"meta.total" => "numeric",
+
+			// first and last page must be available in any condition.
 			"links.first" => "string",
-			"links.last" => null,
+			"links.last" => "string",
+
+			// null should accept string too
 			"links.next" => null,
 			"links.prev" => null,
+
 			"data" => "array",
 		];
 
