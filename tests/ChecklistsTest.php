@@ -12,7 +12,7 @@ use Illuminate\Http\JsonResponse;
  */
 class ChecklistsTest extends TestCase
 {
-	use DataRules;
+	use Utils\DataRules;
 
 	/**
 	 * @return void
@@ -67,7 +67,7 @@ class ChecklistsTest extends TestCase
 			"data.attributes.object_id" => "numeric",
 			"data.attributes.description" => "string",
 			"data.attributes.is_completed" => "boolean",
-			"data.attributes.due" => "NULL",
+			"data.attributes.due" => "string",
 			"data.attributes.urgency" => "numeric",
 			"data.attributes.completed_at" => "NULL",
 			"data.attributes.updated_by" => "NULL",
