@@ -161,6 +161,9 @@ class ChecklistsTest extends TestCase
 		$this->json('GET', sprintf('/checklists?%s', 
 			http_build_query($query)), [], ['Authorization' => TEST_TOKEN]);
 
+		// // Debug here
+		// dd($this->response);
+
 		// Make sure that the http response code is 200 OK
 		$this->assertEquals($this->response->status(), 200);
 
@@ -169,21 +172,26 @@ class ChecklistsTest extends TestCase
 
 		// WARNING:
 		// Please check this manually from your end!!!
-		// function "checklistsToBeCreated" must have at least 2 records 
-		// with different urgency, so that the desc or asc sort can 
-		// be proved in this section.
+		// function "checklistsToBeCreated" must have at least 2 records
+		// in contiguos order with different urgency, so that the
+		// desc or asc sort can be proved in this section.
 
 		// DESC sort
-		$this->assertTrue(count($json["data"] > 1));
-		$this->assertTrue($json["data"][0]["urgency"] > $json["data"][1]["urgency"]);
+		$this->assertTrue(count($json["data"]) > 1);
+		$this->assertTrue(
+			$json["data"][0]["attributes"]["urgency"] > $json["data"][1]["attributes"]["urgency"]
+		);
 
 		$query["sort"] = "urgency";
 		$this->json('GET', sprintf('/checklists?%s', 
 			http_build_query($query)), [], ['Authorization' => TEST_TOKEN]);
+		$json = $this->response->original;
 
 		// ASC sort
-		$this->assertTrue(count($json["data"] > 1));
-		$this->assertTrue($json["data"][0]["urgency"] < $json["data"][1]["urgency"]);
+		$this->assertTrue(count($json["data"]) > 1);
+		$this->assertTrue(
+			$json["data"][0]["attributes"]["urgency"] < $json["data"][1]["attributes"]["urgency"]
+		);
 	}
 
 	/**

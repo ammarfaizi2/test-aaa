@@ -142,9 +142,11 @@ $router->get('/checklists', function (Request $request) {
 				$q["sort"] = substr($q["sort"], 1);
 			}
 
+			$sort = $q["sort"];
+
 			if (!in_array($sort, $availableFields)) {
 				return response()->json(["status" => 400, 
-					"error" => sprintf("Sort error: %s is not a valid field", $q["sort"])], 400);
+					"error" => sprintf("Sort error: %s is not a valid field", $sort)], 400);
 			}
 		}
 
