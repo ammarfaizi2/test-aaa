@@ -303,3 +303,40 @@ $router->get("/checklists/{checklistId}/items", function ($checklistId, Request 
 		return response()->json(["status" => "500", "error" => "Server Error"], 500);
 	}
 });
+
+$router->get("/checklists/{checklistId}/items/{itemId}", function ($checklistId, $itemId, Request $request) {
+	try {
+		if ($checklist = Checklist::find($checklistId)) {
+			if ($item = $checklist->items()->where("item_id", $itemId)->first()) {
+				$ret = [
+					"data" => [
+						"type" => "checklists",
+						"id" => $checklist->id,
+						"attributes" => $checklist->setAppends(
+							[
+								"completed_at",
+								"is_completed",
+								"last_update_by"
+							]
+						)->toArray(),
+						"links" => [
+							"self" => sprintf("%s/api/v1/checklists/%d", env("APP_URL"), $checklist->id)
+						]
+					]
+				];
+				$ret["data"]["attributes"]["item"] = $item->toArray();
+				$ret["data"]["id"] = $ret["data"]["attributes"]["id"];
+				unset($ret["data"]["attributes"]["id"]);
+				return response()->json($ret, 200);
+			}
+		}
+
+		// // Debug here
+		// dd($checklistId, $itemId);
+
+		return response()->json(["status" => "404", "error" => "Not Found"], 404);
+	} catch (Error $e) {
+		return response()->json(["status" => "500", "error" => "Server Error"], 500);
+	}
+});
+
