@@ -327,13 +327,14 @@ class Checklist extends Model
 		return $ret;
 	}
 
+
 	/**
-	 * @param string value
+	 * @param string $value
 	 * @return string
 	 */
 	public function getDueAttribute(string $value): string
 	{
-		return date('c', strtotime($value));
+		return $this->attributes['due'] = date('c', strtotime($value));
 	}
 
 	/**
@@ -342,7 +343,7 @@ class Checklist extends Model
 	 */
 	public function getUpdatedAtAttribute(string $value): string
 	{
-		return date('c', strtotime($value));
+		return $this->attributes['updated_at'] = date('c', strtotime($value));
 	}
 
 	/**
@@ -351,7 +352,7 @@ class Checklist extends Model
 	 */
 	public function getCreatedAtAttribute(string $value): string
 	{
-		return date('c', strtotime($value));
+		return $this->attributes['created_at'] = date('c', strtotime($value));
 	}
 
 	/**

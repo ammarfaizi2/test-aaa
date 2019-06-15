@@ -117,10 +117,15 @@ class ChecklistsTest extends TestCase
 		$rules = [
 			"meta.count" => "numeric",
 			"meta.total" => "numeric",
+
+			// first and last page must be available in any condition.
 			"links.first" => "string",
-			"links.last" => null,
+			"links.last" => "string",
+
+			// null should accept string too
 			"links.next" => null,
 			"links.prev" => null,
+
 			"data" => "array",
 		];
 
@@ -195,7 +200,7 @@ class ChecklistsTest extends TestCase
 	}
 
 	/**
-	 * @depends testCreateChecklist
+	 * @depends testGetListOfChecklists
 	 * @dataProvider checklistsToBeCreated
 	 * @param array $checklist
 	 * @return void
@@ -331,12 +336,24 @@ class ChecklistsTest extends TestCase
 	 * @param array $checklist
 	 * @return void
 	 */
-	public function testDeleteChecklist(): void
+	public function testDeleteChecklist(array $checklist): void
 	{
 		static $id = 1;
 		$this->json('DELETE', sprintf('/checklists/%d', $id), [], ['Authorization' => TEST_TOKEN]);
 		$this->assertEquals($this->response->status(), 204);
 		$id++;
+	}
+
+	/**
+	 * @depends testDeleteChecklist
+	 * @dataProvider checklistsToBeCreated
+	 * @param array $checklist
+	 * @return void
+	 */
+	public function testRecreateAfterDelete(array $checklist): void
+	{
+		$this->testCleanUp();
+		$this->testCreateChecklist($checklist);
 	}
 
 	/**

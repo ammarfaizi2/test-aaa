@@ -274,3 +274,34 @@ $router->post('/checklists', function (Request $request) {
 });
 
 
+$router->get("/checklists/{checklistId}/items", function ($checklistId, Request $request) {
+	try {
+		if ($checklist = Checklist::find($checklistId)) {
+			$ret = [
+				"data" => [
+					"type" => "checklists",
+					"id" => $checklist->id,
+					"attributes" => $checklist->setAppends(
+						[
+							"completed_at",
+							"is_completed",
+							"updated_by"
+						]
+					)->toArray(),
+					"links" => [
+						"self" => sprintf("%s/api/v1/checklists/%d", env("APP_URL"), $checklist->id)
+					]
+				]
+			];
+			foreach ($checklist->items as $item) {
+				$ret["data"]["attributes"]["items"][] = $item->toArray();
+			}
+
+			dd($ret);
+		}
+		dd($checklist);
+		return response()->json(["status" => "404", "error" => "Not Found"], 404);
+	} catch (Error $e) {
+		return response()->json(["status" => "500", "error" => "Server Error"], 500);
+	}
+});
