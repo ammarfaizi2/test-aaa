@@ -33,8 +33,8 @@ class ItemsTest extends TestCase
 		// // Debug here
 		// dd($this->response);
 
-		// Make sure that the http response code is 201
-		$this->assertEquals($this->response->status(), 201);
+		// Make sure that the http response code is 200 OK
+		$this->assertEquals($this->response->status(), 200);
 
 		// Make sure that the response is a JSON.
 		$this->assertTrue($this->response instanceof JsonResponse);
