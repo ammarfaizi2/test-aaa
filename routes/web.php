@@ -48,6 +48,18 @@ $router->get("/checklists/{checklistId}", function ($checklistId) {
 	}
 });
 
+$router->delete("/checklists/{checklistId}", function ($checklistId) {
+	try {
+		if ($r = Checklist::find($checklistId)) {
+			$r->delete();
+			return response(null, 204);
+		}
+		return response()->json(["status" => "404", "error" => "Not Found"], 404);
+	} catch (Error $e) {
+		return response()->json(["status" => "500", "error" => "Server Error"], 500);
+	}
+});
+
 $router->post('/checklists', function (Request $request) {
 	try {
 		$this->validate($request, [
