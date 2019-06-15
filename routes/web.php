@@ -48,11 +48,81 @@ $router->get("/checklists/{checklistId}", function ($checklistId) {
 	}
 });
 
+$router->delete("/checklists/{checklistId}", function ($checklistId, Request $request) {
+	try {
+		if ($r = Checklist::find($checklistId)) {
+			$r->delete();
+			return response(null, 204);
+		}
+		return response()->json(["status" => "404", "error" => "Not Found"], 404);
+	} catch (Error $e) {
+		return response()->json(["status" => "500", "error" => "Server Error"], 500);
+	}
+});
+
+$router->patch("/checklists/{checklistId}", function ($checklistId, Request $request) {
+	try {
+		$this->validate($request, [
+	        'data' => 'required|array',
+	        'data.type' => 'required',
+	        'data.id' => 'required|integer',
+	        'data.attributes' => 'required|array',
+	        'data.attributes.object_domain' => 'required|string',
+	        'data.attributes.object_id' => 'required',
+	        'data.attributes.description' => 'required|string',
+	    ]);
+		if ($r = Checklist::find($checklistId)) {
+			$data = $request->json()->all();
+			$r->object_domain = $data["data"]["attributes"]["object_domain"];
+			$r->object_id = $data["data"]["attributes"]["object_id"];
+			$r->description = $data["data"]["attributes"]["description"];
+			$r->due = $data["data"]["attributes"]["due"];
+			foreach (['due', 'urgency'] as $key) {
+				if (array_key_exists($key, $data["data"]["attributes"])) {
+					$r->{$key} = $data["data"]["attributes"][$key];
+				}
+			}
+			$r->update();
+			$ret = [
+				"data" => [
+					"type" => "checklists",
+					"id" => $r->id,
+					"attributes" => $r->setAppends(
+						[
+							"completed_at",
+							"is_completed",
+							"last_update_by"
+						]
+					)->toArray(),
+					"links" => [
+						"self" => sprintf("%s/api/v1/checklists/%d", env("APP_URL"), $r->id)
+					]
+				]
+			];
+
+
+			$ret["data"]["id"] = $ret["data"]["attributes"]["id"];
+			unset($ret["data"]["attributes"]["id"]);
+			return response()->json($ret, 200);
+		}
+		return response()->json(["status" => "404", "error" => "Not Found"], 404);
+	} catch (Error $e) {
+		return response()->json(["status" => "500", "error" => "Server Error"], 500);
+	}
+});
+
+
+// Get list of checklists.
+$router->get('/checklists', function () {
+
+});
+
+// This creates a Checklist object.
 $router->post('/checklists', function (Request $request) {
 	try {
 		$this->validate($request, [
 	        'data' => 'required',
-	        'data.attributes' => 'required',
+	        'data.attributes' => 'required|array',
 	        'data.attributes.object_domain' => 'required',
 	        'data.attributes.object_id' => 'required',
 	        'data.attributes.description' => 'required',
