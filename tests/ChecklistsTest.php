@@ -12,6 +12,11 @@ use Illuminate\Http\JsonResponse;
  */
 class ChecklistsTest extends TestCase
 {
+	/**
+	 * @const TEST_TOKEN
+	 * @see tests/TestCase.php
+	 */
+
 	use Utils\DataRules;
 
 	/**
@@ -42,6 +47,9 @@ class ChecklistsTest extends TestCase
 	{
 		$checklist = ["data" => ["attributes" => $checklist]];
 		$this->json('POST', '/checklists', $checklist, ['Authorization' => TEST_TOKEN]);
+
+		// Make sure that the http response code is 200 OK
+		$this->assertEquals($this->response->status(), 200);
 
 		// Make sure that the response is a JSON.
 		$this->assertTrue($this->response instanceof JsonResponse);
@@ -94,6 +102,9 @@ class ChecklistsTest extends TestCase
 		static $id = 1;
 		$this->json('GET', sprintf('/checklists/%d', $id), [], ['Authorization' => TEST_TOKEN]);
 
+		// Make sure that the http response code is 200 OK
+		$this->assertEquals($this->response->status(), 200);
+
 		// Make sure that the response is a JSON.
 		$this->assertTrue($this->response instanceof JsonResponse);
 
@@ -125,14 +136,73 @@ class ChecklistsTest extends TestCase
 		$id++;
 	}
 
-
 	/**
 	 * @depends testGetChecklist
+	 * @dataProvider checklistsToBeUpdated
+	 * @param array $checklist
+	 * @return void
+	 */
+	public function testUpdateChecklist(array $checklist): void
+	{
+		static $id = 1;
+		$checklist = [
+			"data" => [
+				"type" => "checklists",
+				"id" => $id,
+				"attributes" => $checklist,
+				"links" => [
+					"self" => sprintf("%s/checklists/%d", env("APP_URL"), $id)
+				]
+			]
+		];
+		$this->json('PATCH', sprintf('/checklists/%d', $id), $checklist, ['Authorization' => TEST_TOKEN]);
+
+		// // Debug here
+		// dd($this->response);
+
+		// Make sure that the http response code is 200 OK
+		$this->assertEquals($this->response->status(), 200);
+
+		// Make sure that the response is a JSON.
+		$this->assertTrue($this->response instanceof JsonResponse);
+
+		$json = $this->response->original;
+
+
+		// https://kw-checklist.docs.stoplight.io/api-reference/checklists/put-checklists
+		$rules = [
+			"data" => "array",
+			"data.type" => "string",
+			"data.id" => "numeric",
+			"data.attributes" => "array",
+			"data.attributes.object_domain" => "string",
+			"data.attributes.object_id" => "numeric",
+			"data.attributes.description" => "string",
+			"data.attributes.is_completed" => "boolean",
+			"data.attributes.due" => "string",
+			"data.attributes.urgency" => "numeric",
+			"data.attributes.completed_at" => "NULL",
+			"data.attributes.last_update_by" => "NULL",
+			"data.attributes.created_at" => "string",
+			"data.attributes.updated_at" => "string",
+			"data.links" => "array",
+			"data.links.self" => ["string", function (string $value) {
+				return filter_var($value, FILTER_VALIDATE_URL);
+			}]
+		];
+
+		$this->assertTrue($this->assertRules($json, $rules));
+
+		$id++;
+	}
+
+	/**
+	 * @depends testUpdateChecklist
 	 * @dataProvider checklistsToBeCreated
 	 * @param array $checklist
 	 * @return void
 	 */
-	public function testDeleteChecklist()
+	public function testDeleteChecklist(): void
 	{
 		static $id = 1;
 		$this->json('DELETE', sprintf('/checklists/%d', $id), [], ['Authorization' => TEST_TOKEN]);
@@ -140,6 +210,24 @@ class ChecklistsTest extends TestCase
 		$id++;
 	}
 
+	/**
+	 * @return array
+	 */
+	public function checklistsToBeUpdated(): array
+	{
+		return [
+			[
+				[
+					"object_domain" => "contact",
+					"object_id" => "1",
+					"due" => "2019-01-25T07:50:14+00:00",
+					"urgency" => 1,
+					"description" => "Need to verify this guy house. (updated)",
+					"task_id" => "123"
+				]
+			]
+		];
+	}
 
 	/**
 	 * @return array
