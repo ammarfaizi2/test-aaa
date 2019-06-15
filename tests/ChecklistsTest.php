@@ -200,7 +200,7 @@ class ChecklistsTest extends TestCase
 	}
 
 	/**
-	 * @depends testCreateChecklist
+	 * @depends testGetListOfChecklists
 	 * @dataProvider checklistsToBeCreated
 	 * @param array $checklist
 	 * @return void
@@ -330,22 +330,30 @@ class ChecklistsTest extends TestCase
 		$id++;
 	}
 
-	// Please note that "@depends" is different with "@Depends"
-	// You can see the discussion about this issue here
-	// https://github.com/sebastianbergmann/phpunit/issues/2647#issuecomment-486186376
-
 	/**
-	 * @Depends \Tests\ItemsTest::testUpdateChecklist
+	 * @depends testUpdateChecklist
 	 * @dataProvider checklistsToBeCreated
 	 * @param array $checklist
 	 * @return void
 	 */
-	public function testDeleteChecklist(): void
+	public function testDeleteChecklist(array $checklist): void
 	{
 		static $id = 1;
 		$this->json('DELETE', sprintf('/checklists/%d', $id), [], ['Authorization' => TEST_TOKEN]);
 		$this->assertEquals($this->response->status(), 204);
 		$id++;
+	}
+
+	/**
+	 * @depends testDeleteChecklist
+	 * @dataProvider checklistsToBeCreated
+	 * @param array $checklist
+	 * @return void
+	 */
+	public function testRecreateAfterDelete(array $checklist): void
+	{
+		$this->testCleanUp();
+		$this->testCreateChecklist($checklist);
 	}
 
 	/**

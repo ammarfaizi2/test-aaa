@@ -19,13 +19,8 @@ class ItemsTest extends TestCase
 
 	use Utils\DataRules;
 
-	// Please note that "@depends" is different with "@Depends"
-	// You can see the discussion about this issue here
-	// https://github.com/sebastianbergmann/phpunit/issues/2647#issuecomment-486186376
-
 	/**
 	 * @dataProvider \Tests\ChecklistsTest::checklistsToBeCreated
-	 * @Depends \Tests\ChecklistsTest::testGetListOfChecklists
 	 * @param array $checklist
 	 * @return void
 	 */
@@ -33,7 +28,7 @@ class ItemsTest extends TestCase
 	{
 		static $id = 1;
 
-		$this->json('DELETE', sprintf('/checklists/%d/items', $id), [], ['Authorization' => TEST_TOKEN]);
+		$this->json('GET', sprintf('/checklists/%d/items', $id), [], ['Authorization' => TEST_TOKEN]);
 
 		dd($this->response);
 
