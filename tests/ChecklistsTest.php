@@ -50,7 +50,7 @@ class ChecklistsTest extends TestCase
 		// We don't need items attribute anymore.
 		unset($checklist["data"]["attributes"]["items"]);
 
-		// Set ID with
+		// Set ID with the response value.
 		$checklist["data"]["attributes"]["id"] = $json["data"]["id"];
 
 		// Check the data in database.
