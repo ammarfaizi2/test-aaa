@@ -135,7 +135,19 @@ class ChecklistsTest extends TestCase
 		// Make sure that the http response code is 200 OK
 		$this->assertEquals($this->response->status(), 200);
 
-		// dd($this->response);
+		$json = $this->response->original;
+
+		$rules = [
+			"meta.count" => "numeric",
+			"meta.total" => "numeric",
+			"links.first" => "string",
+			"links.last" => null,
+			"links.next" => null,
+			"links.prev" => null,
+			"data" => "array",
+		];
+
+		$this->assertTrue($this->assertRules($json, $rules));
 	}
 
 	/**

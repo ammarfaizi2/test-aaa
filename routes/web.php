@@ -175,14 +175,14 @@ $router->get('/checklists', function (Request $request) {
 		$data = $checklist->getListOfChecklists();
 		$ret = [
 			"meta" => [
-				"count" => 0,
+				"count" => count($data),
 				"total" => $checklist->getTotalChecklist()
 			],
 			"links" => [
 				"first" => $checklist->getFirstLink(),
 				"last" => $checklist->getLastLink(),
 				"next" => $checklist->getNextLink(),
-				"back" => $checklist->getBackLink()
+				"prev" => $checklist->getPrevLink()
 			],
 			"data" => $data
 		];
