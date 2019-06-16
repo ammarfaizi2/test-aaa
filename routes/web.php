@@ -552,7 +552,7 @@ $router->post("/checklists/{checklistId}/items/_bulk", function ($checklistId, R
 	try {
 		if ($checklist = Checklist::find($checklistId)) {
 			$this->validate($request, ["data" => "array"]);
-			$data = $reqeust->json()->all();
+			$data = $request->json()->all();
 			$ret = ["data" => []];
 			foreach ($data["data"] as $item) {
 				if (isset(

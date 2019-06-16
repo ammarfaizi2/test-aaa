@@ -373,26 +373,44 @@ class ItemsTest extends TestCase
 	{
 		foreach ($items as $item) {
 			$data = [
-				"data" => [
-					"attributes" => $item["attributes"]
-				]
+				"data" => $item
 			];
 
 			// dd($data);
 
-			$this->json("POST", sprintf("/checklists/%d/items/_bulk", $checklistId, $item["item_id"]), $data,
+			$this->json("POST", sprintf("/checklists/%d/items/_bulk", $checklistId), $data,
 				["Authorization" => TEST_TOKEN]);
 
-			// // Debug here
+			// Debug here
 			// dd($this->response);
 
 			// Make sure that the http response code is 200 OK
 			$this->assertEquals($this->response->status(), 200);
+
+			// Make sure that the response is a JSON.
+			$this->assertTrue($this->response instanceof JsonResponse);
+			$json = $this->response->original;
+
+			$rules = [
+				"data" => "array"
+			];
+
+			$this->assertTrue($this->assertRules($json, $rules));
+
+			$rules = [
+				"id" => "numeric",
+				"action" => "string",
+				"status" => "numeric"
+			];
+			foreach ($json["data"] as $item) {
+				$this->assertTrue($this->assertRules($item, $rules));
+			}
+
 		}
 	}
 
 	/**
-	 * @depends testBulkUpdate
+	 * @depends testBulkUpdateItem
 	 * @dataProvider itemsToBeUpdated
 	 * @param int $checklistId
 	 * @param array $items
@@ -431,21 +449,23 @@ class ItemsTest extends TestCase
 				1,
 				[
 					[
-						"item_id" => 1,
-						"attributes" =>  [
-							"description" => "test bulk update 12334535345",
-							"due" => "2019-03-19 10:33:21",
-							"urgency" => 1,
-							"assignee_id" => 123
-						]
-					],
-					[
-						"item_id" => 2,
-						"attributes" =>  [
-							"description" => "test bulk update 12312",
-							"due" => "2019-03-19 10:33:21",
-							"urgency" => 10,
-							"assignee_id" => 123
+						[
+							"id" => 1,
+							"action" => "update",
+							"attributes" =>  [
+								"description" => "test bulk update 12334535345",
+								"due" => "2020-03-19 10:30:20",
+								"urgency" => 4,
+							]
+						],
+						[
+							"id" => 2,
+							"action" => "update",
+							"attributes" =>  [
+								"description" => "test bulk update 12312",
+								"due" => "2019-03-19 09:12:10",
+								"urgency" => 10,
+							]
 						]
 					]
 				]
