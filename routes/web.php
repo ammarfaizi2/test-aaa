@@ -413,7 +413,11 @@ $router->post("/checklists/{checklistId}/items", function ($checklistId, Request
 		if ($checklist = Checklist::find($checklistId)) {
 			$this->validate($request, [
 				"data" => "required|array",
-				
+				"data.attribute" => "required|array",
+				"data.attribute.description" => "required|string",
+				"data.attribute.is_completed" => "bool",
+				"data.attribute.completed_at" => "string",
+				"data.attribute.due" => "date",
 			]);
 		}
 		return response()->json(["status" => "404", "error" => "Not Found"], 404);
