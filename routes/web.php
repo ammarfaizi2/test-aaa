@@ -487,7 +487,7 @@ $router->patch("/checklists/{checklistId}/items/{itemId}", function ($checklistI
 				"data.attributes.task_id" => "nullable|integer"
 			]);
 
-			$req = $request->json()->all();
+			$data = $request->json()->all();
 
 			if ($itemObj = Item::find($itemId)) {
 				$itemObj->completed_at = date("Y-m-d H:i:s");
