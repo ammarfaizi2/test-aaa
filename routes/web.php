@@ -470,3 +470,56 @@ $router->post("/checklists/{checklistId}/items", function ($checklistId, Request
 		return response()->json(["status" => "500", "error" => "Server Error"], 500);
 	}
 });
+
+$router->patch("/checklists/{checklistId}/items/{itemId}", function ($checklistId, $itemId, Request $request) {
+	try {
+		if ($checklist = Checklist::find($checklistId)) {
+
+			$this->validate($request, [
+				"data" => "required|array",
+				"data.attributes" => "required|array",
+				"data.attributes.description" => "required|string",
+				"data.attributes.urgency" => "integer",
+				"data.attributes.assignee_id" => "nullable|integer",
+				"data.attributes.is_completed" => "bool",
+				"data.attributes.completed_at" => "date",
+				"data.attributes.due" => "date",
+				"data.attributes.task_id" => "nullable|integer"
+			]);
+
+			$req = $request->json()->all();
+
+			if ($itemObj = Item::find($item->id)) {
+				$itemObj->completed_at = date("Y-m-d H:i:s");
+
+				array_key_exists("task_id", $data["data"]["attributes"]) and
+					$item->task_id = $data["data"]["attributes"]["task_id"];
+
+				array_key_exists("assignee_id", $data["data"]["attributes"]) and
+					$item->task_id = $data["data"]["attributes"]["assignee_id"];
+
+				array_key_exists("due", $data["data"]["attributes"]) and
+					$item->task_id = date("Y-m-d H:i:s", strtotime($data["data"]["attributes"]["due"]));
+
+				array_key_exists("urgency", $data["data"]["attributes"]) and
+					$item->urgency = $data["data"]["attributes"]["urgency"];
+
+				$item->name = $data["data"]["attributes"]["description"];
+
+				$itemObj->update();
+				$ret = ["data" => [
+					"type" => "checklists",
+					"id" => $checklistId,
+					"attributes" => $itemObj->toArray(),
+					"links" => [
+						"self" => sprintf("%s/checklists/%d", env("API_URL"), $checklistId)
+					]
+				]];
+				return response()->json($ret, 200);
+			}
+		}
+		return response()->json(["status" => "404", "error" => "Not Found"], 404);
+	} catch (Error $e) {
+		return response()->json(["status" => "500", "error" => "Server Error"], 500);
+	}
+});
