@@ -143,7 +143,47 @@ class ItemsTest extends TestCase
 	 */
 	public function testCompleteItem(array $items): void
 	{
-		$this->assertTrue(true);
+		$data = ["data" => []];
+
+		foreach ($items["item_id"] as $item) {
+			$data["data"][] = [
+				"item_id" => $item
+			];
+		}
+
+		$this->json('POST', sprintf('/checklists/%d/complete', $items["checklist_id"]),
+			$data, ['Authorization' => TEST_TOKEN]);
+
+		// // Debug here
+		// dd($this->response);
+
+		// Make sure that the http response code is 200 OK
+		$this->assertEquals($this->response->status(), 200);
+
+		// Make sure that the response is a JSON.
+		$this->assertTrue($this->response instanceof JsonResponse);
+		$json = $this->response->original;
+
+		$rules = [
+			"data" => "array"
+		];
+		$this->assertTrue($this->assertRules($json, $rules));
+
+		$rules = [
+			"id" => "numeric",
+			"item_id" => "numeric",
+			"is_completed" => ["boolean", function ($value) {
+				return $value === true;
+			}],
+			"checklist_id" => ["numeric", function ($value) use ($items) {
+				return $items["checklist_id"] == $value;
+			}]
+		];
+
+		foreach ($json["data"] as $item) {
+			$this->assertTrue($this->assertRules($item, $rules));
+		}
+
 	}
 
 	/**

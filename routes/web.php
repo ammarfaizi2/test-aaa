@@ -340,3 +340,36 @@ $router->get("/checklists/{checklistId}/items/{itemId}", function ($checklistId,
 	}
 });
 
+$router->post("/checklists/{checklistId}/complete", function ($checklistId, Request $request) {
+	try {
+		if ($checklist = Checklist::find($checklistId)) {
+			$this->validate($request, ['data' => 'required|array']);
+			$req = $request->json()->all();
+			$ret = ["data" => []];
+			foreach ($req["data"] as $item) {
+				if (
+					isset($item["item_id"]) &&
+					($item = $checklist->items()
+					->where("item_id", $item["item_id"])
+					->where("checklist_id", $checklistId)
+					->first())
+				) {
+					if ($itemObj = Item::find($item->id)) {
+						$itemObj->completed_at = date("Y-m-d H:i:s");
+						$itemObj->update();
+						$ret["data"][] = [
+							"id" => $itemObj->id,
+							"item_id" => $itemObj->item_id,
+							"is_completed" => true,
+							"checklist_id" => $checklistId
+						];
+					}
+				}
+			}
+			return response()->json($ret, 200);
+		}
+		return response()->json(["status" => "404", "error" => "Not Found"], 404);
+	} catch (Error $e) {
+		return response()->json(["status" => "500", "error" => "Server Error"], 500);
+	}
+});

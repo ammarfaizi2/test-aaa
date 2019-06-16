@@ -52,6 +52,12 @@ trait DataRules
 					};
 					break;
 			}
+
+			// // Debug here
+			// if (!$callback($ptrVal)) {
+			// 	dd($ptrVal, $callback, $key);
+			// }
+
 			$this->assertTrue((bool)$callback($ptrVal));
 		}
 		return true;
@@ -60,7 +66,7 @@ trait DataRules
 	/**
 	 * @param array $array
 	 * @param array $indexes
-	 * @param mixed $ptrVal
+	 * @param mixed &$ptrVal
 	 * @return bool
 	 */
 	private function internalIndexCheck(array $array, array $indexes, &$ptrVal): bool
