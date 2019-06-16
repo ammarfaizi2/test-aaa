@@ -493,18 +493,18 @@ $router->patch("/checklists/{checklistId}/items/{itemId}", function ($checklistI
 				$itemObj->completed_at = date("Y-m-d H:i:s");
 
 				array_key_exists("task_id", $data["data"]["attributes"]) and
-					$item->task_id = $data["data"]["attributes"]["task_id"];
+					$itemObj->task_id = $data["data"]["attributes"]["task_id"];
 
 				array_key_exists("assignee_id", $data["data"]["attributes"]) and
-					$item->task_id = $data["data"]["attributes"]["assignee_id"];
+					$itemObj->task_id = $data["data"]["attributes"]["assignee_id"];
 
 				array_key_exists("due", $data["data"]["attributes"]) and
-					$item->task_id = date("Y-m-d H:i:s", strtotime($data["data"]["attributes"]["due"]));
+					$itemObj->task_id = date("Y-m-d H:i:s", strtotime($data["data"]["attributes"]["due"]));
 
 				array_key_exists("urgency", $data["data"]["attributes"]) and
-					$item->urgency = $data["data"]["attributes"]["urgency"];
+					$itemObj->urgency = $data["data"]["attributes"]["urgency"];
 
-				$item->name = $data["data"]["attributes"]["description"];
+				$itemObj->name = $data["data"]["attributes"]["description"];
 
 				$itemObj->update();
 				$ret = ["data" => [
