@@ -319,8 +319,8 @@ class ItemsTest extends TestCase
 			$this->json("PATCH", sprintf("/checklists/%d/items/%d", $checklistId, $item["item_id"]), $data,
 				["Authorization" => TEST_TOKEN]);
 
-			// Debug here
-			dd($this->response);
+			// // Debug here
+			// dd($this->response);
 
 			// Make sure that the http response code is 200
 			$this->assertEquals($this->response->status(), 200);

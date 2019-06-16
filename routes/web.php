@@ -496,10 +496,10 @@ $router->patch("/checklists/{checklistId}/items/{itemId}", function ($checklistI
 					$itemObj->task_id = $data["data"]["attributes"]["task_id"];
 
 				array_key_exists("assignee_id", $data["data"]["attributes"]) and
-					$itemObj->task_id = $data["data"]["attributes"]["assignee_id"];
+					$itemObj->assignee_id = $data["data"]["attributes"]["assignee_id"];
 
 				array_key_exists("due", $data["data"]["attributes"]) and
-					$itemObj->task_id = date("Y-m-d H:i:s", strtotime($data["data"]["attributes"]["due"]));
+					$itemObj->due = date("Y-m-d H:i:s", strtotime($data["data"]["attributes"]["due"]));
 
 				array_key_exists("urgency", $data["data"]["attributes"]) and
 					$itemObj->urgency = $data["data"]["attributes"]["urgency"];
