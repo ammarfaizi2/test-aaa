@@ -527,7 +527,7 @@ $router->patch("/checklists/{checklistId}/items/{itemId}", function ($checklistI
 $router->delete("/checklists/{checklistId}/items/{itemId}", function ($checklistId, $itemId) {
 	try {
 		if ($checklist = Checklist::find($checklistId)) {
-			if ($itemObj = Item::find($item->id)) {
+			if ($itemObj = Item::find($itemId)) {
 				$itemObj->delete();
 				return response(null, 204);
 			}
