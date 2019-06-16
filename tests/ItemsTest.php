@@ -364,6 +364,35 @@ class ItemsTest extends TestCase
 
 	/**
 	 * @depends testUpdateItem
+	 * @dataProvider itemsToBeBulkUpdated
+	 * @param int $checklistId
+	 * @param array $items
+	 * @return void
+	 */
+	public function testBulkUpdateItem(int $checklistId, array $items): void
+	{
+		foreach ($items as $item) {
+			$data = [
+				"data" => [
+					"attributes" => $item["attributes"]
+				]
+			];
+
+			// dd($data);
+
+			$this->json("POST", sprintf("/checklists/%d/items/_bulk", $checklistId, $item["item_id"]), $data,
+				["Authorization" => TEST_TOKEN]);
+
+			// // Debug here
+			// dd($this->response);
+
+			// Make sure that the http response code is 200 OK
+			$this->assertEquals($this->response->status(), 200);
+		}
+	}
+
+	/**
+	 * @depends testBulkUpdate
 	 * @dataProvider itemsToBeUpdated
 	 * @param int $checklistId
 	 * @param array $items
@@ -390,6 +419,38 @@ class ItemsTest extends TestCase
 			// Make sure that the http response code is 204 OK
 			$this->assertEquals($this->response->status(), 204);
 		}
+	}
+
+	/**
+	 * @return array
+	 */
+	public function itemsToBeBulkUpdated(): array
+	{
+		return [
+			[
+				1,
+				[
+					[
+						"item_id" => 1,
+						"attributes" =>  [
+							"description" => "test bulk update 12334535345",
+							"due" => "2019-03-19 10:33:21",
+							"urgency" => 1,
+							"assignee_id" => 123
+						]
+					],
+					[
+						"item_id" => 2,
+						"attributes" =>  [
+							"description" => "test bulk update 12312",
+							"due" => "2019-03-19 10:33:21",
+							"urgency" => 10,
+							"assignee_id" => 123
+						]
+					]
+				]
+			]
+		];
 	}
 
 	/**
