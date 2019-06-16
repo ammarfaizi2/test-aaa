@@ -29,7 +29,7 @@ class ItemsTest extends TestCase
 		static $id = 1;
 
 		// Without filter.
-		$this->json('GET', sprintf('/checklists/%d/items', $id), [], ['Authorization' => TEST_TOKEN]);
+		$this->json("GET", sprintf("/checklists/%d/items", $id), [], ["Authorization" => TEST_TOKEN]);
 
 		// // Debug here
 		// dd($this->response);
@@ -82,7 +82,7 @@ class ItemsTest extends TestCase
 
 		foreach ($checklist["items"] as $k => $item) {
 			// Without filter.
-			$this->json('GET', sprintf('/checklists/%d/items/%d', $id, $k + 1), [], ['Authorization' => TEST_TOKEN]);
+			$this->json("GET", sprintf("/checklists/%d/items/%d", $id, $k + 1), [], ["Authorization" => TEST_TOKEN]);
 
 			// // Debug here
 			// dd($this->response);
@@ -151,8 +151,8 @@ class ItemsTest extends TestCase
 			];
 		}
 
-		$this->json('POST', sprintf('/checklists/%d/complete', $items["checklist_id"]),
-			$data, ['Authorization' => TEST_TOKEN]);
+		$this->json("POST", sprintf("/checklists/%d/complete", $items["checklist_id"]),
+			$data, ["Authorization" => TEST_TOKEN]);
 
 		// // Debug here
 		// dd($this->response);
@@ -183,7 +183,88 @@ class ItemsTest extends TestCase
 		foreach ($json["data"] as $item) {
 			$this->assertTrue($this->assertRules($item, $rules));
 		}
+	}
 
+	/**
+	 * @depends testCompleteItem
+	 * @dataProvider itemsToBeCompleted
+	 * @param array $items
+	 * @return void
+	 */
+	public function testIncompleteItem(array $items): void
+	{
+		$data = ["data" => []];
+
+		foreach ($items["item_id"] as $item) {
+			$data["data"][] = [
+				"item_id" => $item
+			];
+		}
+
+		$this->json("POST", sprintf("/checklists/%d/incomplete", $items["checklist_id"]),
+			$data, ["Authorization" => TEST_TOKEN]);
+
+		// // Debug here
+		// dd($this->response);
+
+		// Make sure that the http response code is 200 OK
+		$this->assertEquals($this->response->status(), 200);
+
+		// Make sure that the response is a JSON.
+		$this->assertTrue($this->response instanceof JsonResponse);
+		$json = $this->response->original;
+
+		$rules = [
+			"data" => "array"
+		];
+		$this->assertTrue($this->assertRules($json, $rules));
+
+		$rules = [
+			"id" => "numeric",
+			"item_id" => "numeric",
+			"is_completed" => ["boolean", function ($value) {
+				return $value === false;
+			}],
+			"checklist_id" => ["numeric", function ($value) use ($items) {
+				return $items["checklist_id"] == $value;
+			}]
+		];
+
+		foreach ($json["data"] as $item) {
+			$this->assertTrue($this->assertRules($item, $rules));
+		}
+	}
+
+	/**
+	 * @depends testIncompleteItem
+	 * @dataProvider newItemsToBeCreated
+	 * @param int $checklistId
+	 * @param array $items
+	 * @return void
+	 */
+	public function testCreateItem(int $checklistId, array $items): void
+	{
+
+	}
+
+	/**
+	 * @return array
+	 */
+	public function newItemsToBeCreated(): array
+	{
+		return [
+			[
+				1,
+				[
+					[
+						"description" => "test item abc",
+						"due" => "2019-01-19 18:34:51",
+						"urgency" => 2,
+						"assignee_id" => 123
+					]
+				]
+			]
+		];
 	}
 
 	/**

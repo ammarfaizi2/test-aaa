@@ -17,7 +17,7 @@ trait DataRules
 	private function assertRules(array $array, array $rules): bool
 	{
 		foreach ($rules as $key => $rule) {
-			$key = explode('.', $key);
+			$key = explode(".", $key);
 			$ptrVal = null;
 
 			// Debug here
@@ -32,8 +32,8 @@ trait DataRules
 			}
 
 			switch ($rule) {
-				case 'numeric':
-					$callback = 'is_numeric';
+				case "numeric":
+					$callback = "is_numeric";
 					break;
 				
 				default:

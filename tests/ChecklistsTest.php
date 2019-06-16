@@ -46,7 +46,7 @@ class ChecklistsTest extends TestCase
 	public function testCreateChecklist(array $checklist): void
 	{
 		$checklist = ["data" => ["attributes" => $checklist]];
-		$this->json('POST', '/checklists', $checklist, ['Authorization' => TEST_TOKEN]);
+		$this->json("POST", "/checklists", $checklist, ["Authorization" => TEST_TOKEN]);
 
 		// // Debug here
 		// dd($this->response);
@@ -58,14 +58,14 @@ class ChecklistsTest extends TestCase
 		$this->assertTrue($this->response instanceof JsonResponse);
 		$json = $this->response->original;
 
-		// We don't need items attribute anymore.
+		// We don"t need items attribute anymore.
 		unset($checklist["data"]["attributes"]["items"]);
 
 		// Set ID with the response value.
 		$checklist["data"]["attributes"]["id"] = $json["data"]["id"];
 
 		// Check the data in database.
-		$this->seeInDatabase('checklists', $checklist["data"]["attributes"]);
+		$this->seeInDatabase("checklists", $checklist["data"]["attributes"]);
 
 		// Make sure that the JSON has the same pattern and data type with
 		// https://kw-checklist.docs.stoplight.io/api-reference/checklists/post-checklists
@@ -131,7 +131,7 @@ class ChecklistsTest extends TestCase
 
 
 	// 	// Without any filter.
-	// 	$this->json('GET', '/checklists', [], ['Authorization' => TEST_TOKEN]);
+	// 	$this->json("GET", "/checklists", [], ["Authorization" => TEST_TOKEN]);
 
 	// 	// Make sure that the http response code is 200 OK
 	// 	$this->assertEquals($this->response->status(), 200);
@@ -148,8 +148,8 @@ class ChecklistsTest extends TestCase
 	// 		]
 	// 	];
 
-	// 	$this->json('GET', sprintf('/checklists?%s', 
-	// 		http_build_query($query)), [], ['Authorization' => TEST_TOKEN]);
+	// 	$this->json("GET", sprintf("/checklists?%s", 
+	// 		http_build_query($query)), [], ["Authorization" => TEST_TOKEN]);
 
 	// 	// Make sure that the http response code is 200 OK
 	// 	$this->assertEquals($this->response->status(), 200);
@@ -163,8 +163,8 @@ class ChecklistsTest extends TestCase
 	// 		"sort" => "-urgency"
 	// 	];
 
-	// 	$this->json('GET', sprintf('/checklists?%s', 
-	// 		http_build_query($query)), [], ['Authorization' => TEST_TOKEN]);
+	// 	$this->json("GET", sprintf("/checklists?%s", 
+	// 		http_build_query($query)), [], ["Authorization" => TEST_TOKEN]);
 
 	// 	// // Debug here
 	// 	// dd($this->response);
@@ -188,8 +188,8 @@ class ChecklistsTest extends TestCase
 	// 	);
 
 	// 	$query["sort"] = "urgency";
-	// 	$this->json('GET', sprintf('/checklists?%s', 
-	// 		http_build_query($query)), [], ['Authorization' => TEST_TOKEN]);
+	// 	$this->json("GET", sprintf("/checklists?%s", 
+	// 		http_build_query($query)), [], ["Authorization" => TEST_TOKEN]);
 	// 	$json = $this->response->original;
 
 	// 	// ASC sort
@@ -208,7 +208,7 @@ class ChecklistsTest extends TestCase
 	// public function testGetChecklist(array $checklist): void
 	// {
 	// 	static $id = 1;
-	// 	$this->json('GET', sprintf('/checklists/%d', $id), [], ['Authorization' => TEST_TOKEN]);
+	// 	$this->json("GET", sprintf("/checklists/%d", $id), [], ["Authorization" => TEST_TOKEN]);
 
 	// 	// Make sure that the http response code is 200 OK
 	// 	$this->assertEquals($this->response->status(), 200);
@@ -276,7 +276,7 @@ class ChecklistsTest extends TestCase
 	// 			]
 	// 		]
 	// 	];
-	// 	$this->json('PATCH', sprintf('/checklists/%d', $id), $checklist, ['Authorization' => TEST_TOKEN]);
+	// 	$this->json("PATCH", sprintf("/checklists/%d", $id), $checklist, ["Authorization" => TEST_TOKEN]);
 
 	// 	// // Debug here
 	// 	// dd($this->response);
@@ -339,7 +339,7 @@ class ChecklistsTest extends TestCase
 	// public function testDeleteChecklist(array $checklist): void
 	// {
 	// 	static $id = 1;
-	// 	$this->json('DELETE', sprintf('/checklists/%d', $id), [], ['Authorization' => TEST_TOKEN]);
+	// 	$this->json("DELETE", sprintf("/checklists/%d", $id), [], ["Authorization" => TEST_TOKEN]);
 	// 	$this->assertEquals($this->response->status(), 204);
 	// 	$id++;
 	// }

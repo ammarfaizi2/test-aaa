@@ -15,7 +15,7 @@ use App\Item;
 use App\Checklist;
 use Illuminate\Http\Request;
 
-$router->get('/', function () use ($router) {
+$router->get("/", function () use ($router) {
     return $router->app->version();
 });
 
@@ -63,13 +63,13 @@ $router->delete("/checklists/{checklistId}", function ($checklistId, Request $re
 $router->patch("/checklists/{checklistId}", function ($checklistId, Request $request) {
 	try {
 		$this->validate($request, [
-	        'data' => 'required|array',
-	        'data.type' => 'required',
-	        'data.id' => 'required|integer',
-	        'data.attributes' => 'required|array',
-	        'data.attributes.object_domain' => 'required|string',
-	        'data.attributes.object_id' => 'required',
-	        'data.attributes.description' => 'required|string',
+	        "data" => "required|array",
+	        "data.type" => "required",
+	        "data.id" => "required|integer",
+	        "data.attributes" => "required|array",
+	        "data.attributes.object_domain" => "required|string",
+	        "data.attributes.object_id" => "required",
+	        "data.attributes.description" => "required|string",
 	    ]);
 		if ($r = Checklist::find($checklistId)) {
 			$data = $request->json()->all();
@@ -77,7 +77,7 @@ $router->patch("/checklists/{checklistId}", function ($checklistId, Request $req
 			$r->object_id = $data["data"]["attributes"]["object_id"];
 			$r->description = $data["data"]["attributes"]["description"];
 			$r->due = $data["data"]["attributes"]["due"];
-			foreach (['due', 'urgency'] as $key) {
+			foreach (["due", "urgency"] as $key) {
 				if (array_key_exists($key, $data["data"]["attributes"])) {
 					$r->{$key} = $data["data"]["attributes"][$key];
 				}
@@ -113,7 +113,7 @@ $router->patch("/checklists/{checklistId}", function ($checklistId, Request $req
 
 
 // Get list of checklists.
-$router->get('/checklists', function (Request $request) {
+$router->get("/checklists", function (Request $request) {
 	try {
 		$limit = 10;
 		$offset = 0;
@@ -204,16 +204,16 @@ $router->get('/checklists', function (Request $request) {
 });
 
 // This creates a Checklist object.
-$router->post('/checklists', function (Request $request) {
+$router->post("/checklists", function (Request $request) {
 	try {
 		$this->validate($request, [
-	        'data' => 'required',
-	        'data.attributes' => 'required|array',
-	        'data.attributes.object_domain' => 'required',
-	        'data.attributes.object_id' => 'required',
-	        'data.attributes.description' => 'required',
-	        'data.attributes.due' => 'date',
-	        'data.attributes.items' => 'required|array'
+	        "data" => "required",
+	        "data.attributes" => "required|array",
+	        "data.attributes.object_domain" => "required",
+	        "data.attributes.object_id" => "required",
+	        "data.attributes.description" => "required",
+	        "data.attributes.due" => "date",
+	        "data.attributes.items" => "required|array"
 	    ]);
 		$data = $request->json()->all();
 
@@ -223,7 +223,7 @@ $router->post('/checklists', function (Request $request) {
 		}
 
 		$checklist = new Checklist();
-		foreach (['object_domain', 'object_id', 'due', 'urgency', 'description', 'task_id'] as $k) {
+		foreach (["object_domain", "object_id", "due", "urgency", "description", "task_id"] as $k) {
 			$checklist->{$k} = isset($data["data"]["attributes"][$k]) ? 
 				$data["data"]["attributes"][$k] : null;
 		}
@@ -239,8 +239,8 @@ $router->post('/checklists', function (Request $request) {
 			$itemObj->due = $data["data"]["attributes"]["due"];
 			$itemObj->urgency = $data["data"]["attributes"]["urgency"];
 
-			// I don't know where does 123 come from.
-			// I just have read the documetation, but couldn't it.
+			// I don"t know where does 123 come from.
+			// I just have read the documetation, but couldn"t it.
 			// Ref: https://kw-checklist.docs.stoplight.io/api-reference/items/get-checklist-item-details
 			// This is too vague, so I set it to 123 for temporary.
 			$itemObj->assignee_id = 123;
@@ -343,7 +343,7 @@ $router->get("/checklists/{checklistId}/items/{itemId}", function ($checklistId,
 $router->post("/checklists/{checklistId}/complete", function ($checklistId, Request $request) {
 	try {
 		if ($checklist = Checklist::find($checklistId)) {
-			$this->validate($request, ['data' => 'required|array']);
+			$this->validate($request, ["data" => "required|array"]);
 			$req = $request->json()->all();
 			$ret = ["data" => []];
 			foreach ($req["data"] as $item) {
@@ -367,6 +367,54 @@ $router->post("/checklists/{checklistId}/complete", function ($checklistId, Requ
 				}
 			}
 			return response()->json($ret, 200);
+		}
+		return response()->json(["status" => "404", "error" => "Not Found"], 404);
+	} catch (Error $e) {
+		return response()->json(["status" => "500", "error" => "Server Error"], 500);
+	}
+});
+
+$router->post("/checklists/{checklistId}/incomplete", function ($checklistId, Request $request) {
+	try {
+		if ($checklist = Checklist::find($checklistId)) {
+			$this->validate($request, ["data" => "required|array"]);
+			$req = $request->json()->all();
+			$ret = ["data" => []];
+			foreach ($req["data"] as $item) {
+				if (
+					isset($item["item_id"]) &&
+					($item = $checklist->items()
+					->where("item_id", $item["item_id"])
+					->where("checklist_id", $checklistId)
+					->first())
+				) {
+					if ($itemObj = Item::find($item->id)) {
+						$itemObj->completed_at = date("Y-m-d H:i:s");
+						$itemObj->update();
+						$ret["data"][] = [
+							"id" => $itemObj->id,
+							"item_id" => $itemObj->item_id,
+							"is_completed" => false,
+							"checklist_id" => $checklistId
+						];
+					}
+				}
+			}
+			return response()->json($ret, 200);
+		}
+		return response()->json(["status" => "404", "error" => "Not Found"], 404);
+	} catch (Error $e) {
+		return response()->json(["status" => "500", "error" => "Server Error"], 500);
+	}
+});
+
+$router->post("/checklists/{checklistId}/items", function ($checklistId, Request $request) {
+	try {
+		if ($checklist = Checklist::find($checklistId)) {
+			$this->validate($request, [
+				"data" => "required|array",
+				
+			]);
 		}
 		return response()->json(["status" => "404", "error" => "Not Found"], 404);
 	} catch (Error $e) {
