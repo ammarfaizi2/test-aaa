@@ -416,11 +416,11 @@ $router->post("/checklists/{checklistId}/items", function ($checklistId, Request
 				"data.attributes" => "required|array",
 				"data.attributes.description" => "required|string",
 				"data.attributes.urgency" => "integer",
-				"data.attributes.assignee_id" => "null|integer",
+				"data.attributes.assignee_id" => "nullable|integer",
 				"data.attributes.is_completed" => "bool",
 				"data.attributes.completed_at" => "date",
 				"data.attributes.due" => "date",
-				"data.attributes.task_id" => "null|integer"
+				"data.attributes.task_id" => "nullable|integer"
 			]);
 
 			$data = $request->json()->all();
@@ -461,7 +461,8 @@ $router->post("/checklists/{checklistId}/items", function ($checklistId, Request
 				]
 			];
 
-			dd($ret);
+			unset($ret["data"]["attributes"]["id"]);
+			return response()->json($ret, 200);
 		}
 		return response()->json(["status" => "404", "error" => "Not Found"], 404);
 	} catch (Error $e) {

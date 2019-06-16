@@ -254,8 +254,16 @@ class ItemsTest extends TestCase
 			$this->json("POST", sprintf("/checklists/%d/items", $checklistId), $data,
 				["Authorization" => TEST_TOKEN]);
 
-			// Debug here
-			dd($this->response);
+			// // Debug here
+			// dd($this->response);
+
+			// Make sure that the http response code is 200 OK
+			$this->assertEquals($this->response->status(), 200);
+
+			// Make sure that the response is a JSON.
+			$this->assertTrue($this->response instanceof JsonResponse);
+			$json = $this->response->original;
+
 
 		}
 
