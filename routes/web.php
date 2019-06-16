@@ -413,20 +413,44 @@ $router->post("/checklists/{checklistId}/items", function ($checklistId, Request
 		if ($checklist = Checklist::find($checklistId)) {
 			$this->validate($request, [
 				"data" => "required|array",
-				"data.attribute" => "required|array",
-				"data.attribute.description" => "required|string",
-				"data.attribute.urgency" => "integer",
-				"data.attribute.is_completed" => "bool",
-				"data.attribute.completed_at" => "string",
-				"data.attribute.due" => "date",
+				"data.attributes" => "required|array",
+				"data.attributes.description" => "required|string",
+				"data.attributes.urgency" => "integer",
+				"data.attributes.assignee_id" => "null|integer",
+				"data.attributes.is_completed" => "bool",
+				"data.attributes.completed_at" => "date",
+				"data.attributes.due" => "date",
+				"data.attributes.task_id" => "null|integer"
 			]);
 
 			$data = $request->json()->all();
 
 			$item = new Item;
-			$item->name = $data["data"]["attribute"]["description"];
-			$item->due = $data["data"]["attribute"]["due"];
-			$item->urgency = $data["data"]["attribute"]["urgency"];
+
+			$latestItemId = Item::where("checklist_id", $checklistId)
+				->orderBy("item_id", "desc")
+				->first();
+
+			if ($latestItemId) {
+				$latestItemId = $latestItemId->item_id;
+			} else {
+				$latestItemId = 0;
+			}
+
+			if (isset($data["data"]["attributes"]["is_completed"]) && $data["data"]["attributes"]["is_completed"]) {
+				if (isset($data["data"]["attributes"]["completed_at"])) {
+					$item->completed_at = date("Y-m-d H:i:s", strtotime($data["data"]["attributes"]["completed_at"]));
+				} else {
+					$item->completed_at = date("Y-m-d H:i:s");
+				}
+			}
+
+			$item->assignee_id = $data["data"]["attributes"]["assignee_id"];
+			$item->checklist_id = $checklistId;
+			$item->item_id = $latestItemId + 1;
+			$item->name = $data["data"]["attributes"]["description"];
+			$item->due = $data["data"]["attributes"]["due"] ?? null;
+			$item->urgency = $data["data"]["attributes"]["urgency"];
 			$item->save();
 
 			$ret = [

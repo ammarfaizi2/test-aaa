@@ -19,9 +19,9 @@ class CreateItemsTable extends Migration
             $table->unsignedBigInteger('checklist_id');
             $table->string('name');
             $table->dateTime('due')->nullable();
-            $table->integer('urgency');
-            $table->unsignedBigInteger('assignee_id');
-            $table->string('task_id');
+            $table->integer('urgency')->nullable();;
+            $table->unsignedBigInteger('assignee_id')->nullable();;
+            $table->string('task_id')->nullable();;
             $table->dateTime('completed_at')->nullable();
             $table->unsignedBigInteger('last_update_by')->nullable();
             $table->timestamps();

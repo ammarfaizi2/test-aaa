@@ -247,7 +247,7 @@ class ItemsTest extends TestCase
 		foreach ($items as $item) {
 			$data = [
 				"data" => [
-					"attributes" => $items
+					"attributes" => $item
 				]
 			];
 
