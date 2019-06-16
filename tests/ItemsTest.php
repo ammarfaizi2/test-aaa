@@ -244,6 +244,20 @@ class ItemsTest extends TestCase
 	 */
 	public function testCreateItem(int $checklistId, array $items): void
 	{
+		foreach ($items as $item) {
+			$data = [
+				"data" => [
+					"attributes" => $items
+				]
+			];
+
+			$this->json("POST", sprintf("/checklists/%d/items", $checklistId), $data,
+				["Authorization" => TEST_TOKEN]);
+
+			// Debug here
+			dd($this->response);
+
+		}
 
 	}
 

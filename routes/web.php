@@ -415,10 +415,29 @@ $router->post("/checklists/{checklistId}/items", function ($checklistId, Request
 				"data" => "required|array",
 				"data.attribute" => "required|array",
 				"data.attribute.description" => "required|string",
+				"data.attribute.urgency" => "integer",
 				"data.attribute.is_completed" => "bool",
 				"data.attribute.completed_at" => "string",
 				"data.attribute.due" => "date",
 			]);
+
+			$data = $request->json()->all();
+
+			$item = new Item;
+			$item->name = $data["data"]["attribute"]["description"];
+			$item->due = $data["data"]["attribute"]["due"];
+			$item->urgency = $data["data"]["attribute"]["urgency"];
+			$item->save();
+
+			$ret = [
+				"data" => [
+					"type" => "checklists",
+					"id" => $checklistId,
+					"attributes" => $item->toArray()
+				]
+			];
+
+			dd($ret);
 		}
 		return response()->json(["status" => "404", "error" => "Not Found"], 404);
 	} catch (Error $e) {
