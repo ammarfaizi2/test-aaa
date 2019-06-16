@@ -197,7 +197,7 @@ $router->get("/checklists", function (Request $request) {
 	} catch (Error $e) {
 
 		// Debug here
-		dd($e->getMessage());
+		// dd($e->getMessage());
 
 		return response()->json(["status" => "500", "error" => "Server Error"], 500);
 	}
@@ -413,15 +413,137 @@ $router->post("/checklists/{checklistId}/items", function ($checklistId, Request
 		if ($checklist = Checklist::find($checklistId)) {
 			$this->validate($request, [
 				"data" => "required|array",
-				"data.attribute" => "required|array",
-				"data.attribute.description" => "required|string",
-				"data.attribute.is_completed" => "bool",
-				"data.attribute.completed_at" => "string",
-				"data.attribute.due" => "date",
+				"data.attributes" => "required|array",
+				"data.attributes.description" => "required|string",
+				"data.attributes.urgency" => "integer",
+				"data.attributes.assignee_id" => "nullable|integer",
+				"data.attributes.is_completed" => "bool",
+				"data.attributes.completed_at" => "date",
+				"data.attributes.due" => "date",
+				"data.attributes.task_id" => "nullable|integer"
 			]);
+
+			$data = $request->json()->all();
+
+			$item = new Item;
+
+			$latestItemId = Item::where("checklist_id", $checklistId)
+				->orderBy("item_id", "desc")
+				->first();
+
+			if ($latestItemId) {
+				$latestItemId = $latestItemId->item_id;
+			} else {
+				$latestItemId = 0;
+			}
+
+			if (isset($data["data"]["attributes"]["is_completed"]) && $data["data"]["attributes"]["is_completed"]) {
+				if (isset($data["data"]["attributes"]["completed_at"])) {
+					$item->completed_at = date("Y-m-d H:i:s", strtotime($data["data"]["attributes"]["completed_at"]));
+				} else {
+					$item->completed_at = date("Y-m-d H:i:s");
+				}
+			}
+
+			$item->task_id = $data["data"]["attributes"]["task_id"] ?? null;
+			$item->assignee_id = $data["data"]["attributes"]["assignee_id"] ?? null;
+			$item->checklist_id = $checklistId;
+			$item->item_id = $latestItemId + 1;
+			$item->name = $data["data"]["attributes"]["description"];
+			$item->due = $data["data"]["attributes"]["due"] ?? null;
+			$item->urgency = $data["data"]["attributes"]["urgency"];
+			$item->save();
+
+			$ret = [
+				"data" => [
+					"type" => "checklists",
+					"id" => $checklistId,
+					"attributes" => $item->toArray()
+				]
+			];
+
+			unset($ret["data"]["attributes"]["id"]);
+			return response()->json($ret, 200);
 		}
 		return response()->json(["status" => "404", "error" => "Not Found"], 404);
 	} catch (Error $e) {
 		return response()->json(["status" => "500", "error" => "Server Error"], 500);
 	}
 });
+
+$router->patch("/checklists/{checklistId}/items/{itemId}", function ($checklistId, $itemId, Request $request) {
+	try {
+		if ($checklist = Checklist::find($checklistId)) {
+
+			$this->validate($request, [
+				"data" => "required|array",
+				"data.attributes" => "required|array",
+				"data.attributes.description" => "required|string",
+				"data.attributes.urgency" => "integer",
+				"data.attributes.assignee_id" => "nullable|integer",
+				"data.attributes.is_completed" => "bool",
+				"data.attributes.completed_at" => "date",
+				"data.attributes.due" => "date",
+				"data.attributes.task_id" => "nullable|integer"
+			]);
+
+			$data = $request->json()->all();
+
+			if ($itemObj = Item::find($itemId)) {
+				$itemObj->completed_at = date("Y-m-d H:i:s");
+
+				array_key_exists("task_id", $data["data"]["attributes"]) and
+					$itemObj->task_id = $data["data"]["attributes"]["task_id"];
+
+				array_key_exists("assignee_id", $data["data"]["attributes"]) and
+					$itemObj->assignee_id = $data["data"]["attributes"]["assignee_id"];
+
+				array_key_exists("due", $data["data"]["attributes"]) and
+					$itemObj->due = date("Y-m-d H:i:s", strtotime($data["data"]["attributes"]["due"]));
+
+				array_key_exists("urgency", $data["data"]["attributes"]) and
+					$itemObj->urgency = $data["data"]["attributes"]["urgency"];
+
+				$itemObj->name = $data["data"]["attributes"]["description"];
+
+				$itemObj->update();
+
+				$ret = ["data" => [
+					"type" => "checklists",
+					"id" => $checklistId,
+					"attributes" => $itemObj->toArray(),
+					"links" => [
+						"self" => sprintf("%s/checklists/%d", env("API_URL"), $checklistId)
+					]
+				]];
+
+				foreach (["created_at", "updated_at", "completed_at", "due"] as $key) {
+					if (isset($ret["data"]["attributes"][$key])) {
+						$ret["data"]["attributes"][$key] = date("c",
+							strtotime($ret["data"]["attributes"][$key]));
+					}
+				}
+
+				return response()->json($ret, 200);
+			}
+		}
+		return response()->json(["status" => "404", "error" => "Not Found"], 404);
+	} catch (Error $e) {
+		return response()->json(["status" => "500", "error" => "Server Error"], 500);
+	}
+});
+
+$router->delete("/checklists/{checklistId}/items/{itemId}", function ($checklistId, $itemId) {
+	try {
+		if ($checklist = Checklist::find($checklistId)) {
+			if ($itemObj = Item::find($itemId)) {
+				$itemObj->delete();
+				return response(null, 204);
+			}
+		}
+		return response()->json(["status" => "404", "error" => "Not Found"], 404);
+	} catch (Error $e) {
+		return response()->json(["status" => "500", "error" => "Server Error"], 500);
+	}
+});
+

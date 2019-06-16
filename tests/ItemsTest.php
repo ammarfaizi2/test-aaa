@@ -244,7 +244,175 @@ class ItemsTest extends TestCase
 	 */
 	public function testCreateItem(int $checklistId, array $items): void
 	{
+		foreach ($items as $item) {
+			$data = [
+				"data" => [
+					"attributes" => $item
+				]
+			];
 
+			$this->json("POST", sprintf("/checklists/%d/items", $checklistId), $data,
+				["Authorization" => TEST_TOKEN]);
+
+			// // Debug here
+			// dd($this->response);
+
+			// Make sure that the http response code is 200 OK
+			$this->assertEquals($this->response->status(), 200);
+
+			// Make sure that the response is a JSON.
+			$this->assertTrue($this->response instanceof JsonResponse);
+			$json = $this->response->original;
+
+			$rules = [
+				"data" => "array",
+				"data.type" => "string",
+				"data.id" => "numeric",
+				"data.attributes.assignee_id" => "numeric",
+				"data.attributes.checklist_id" => "numeric",
+				"data.attributes.item_id" => "numeric",
+				"data.attributes.name" => "string",
+				"data.attributes.due" => "string",
+				"data.attributes.urgency" => "numeric",
+				"data.attributes.created_at" => "string",
+				"data.attributes.updated_at" => "string"
+			];
+
+			// dd($json);
+
+			$this->assertTrue($this->assertRules($json, $rules));
+
+			// Date time format ISO 8601
+			foreach (["created_at", "updated_at", "completed_at", "due"] as $key) {
+				if (isset($json["data"]["attributes"][$key])) {
+					$this->assertTrue((bool)
+						// \S means PCRE study.
+						preg_match(
+							"/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+\d{2}:\d{2}$/S",
+							$json["data"]["attributes"][$key]
+						)
+					);
+				}
+			}
+
+		}
+	}
+
+	/**
+	 * @depends testCreateItem
+	 * @dataProvider itemsToBeUpdated
+	 * @param int $checklistId
+	 * @param array $items
+	 * @return void
+	 */
+	public function testUpdateItem(int $checklistId, array $items): void
+	{
+		foreach ($items as $item) {
+			$data = [
+				"data" => [
+					"attributes" => $item["attributes"]
+				]
+			];
+
+			// dd($data);
+
+			$this->json("PATCH", sprintf("/checklists/%d/items/%d", $checklistId, $item["item_id"]), $data,
+				["Authorization" => TEST_TOKEN]);
+
+			// // Debug here
+			// dd($this->response);
+
+			// Make sure that the http response code is 200
+			$this->assertEquals($this->response->status(), 200);
+
+			// Make sure that the response is a JSON.
+			$this->assertTrue($this->response instanceof JsonResponse);
+			$json = $this->response->original;
+
+			$rules = [
+				"data" => "array",
+				"data.type" => "string",
+				"data.id" => "numeric",
+				"data.attributes.assignee_id" => "numeric",
+				"data.attributes.checklist_id" => "numeric",
+				"data.attributes.item_id" => "numeric",
+				"data.attributes.name" => "string",
+				"data.attributes.due" => "string",
+				"data.attributes.urgency" => "numeric",
+				"data.attributes.created_at" => "string",
+				"data.attributes.updated_at" => "string"
+			];
+
+			// dd($json);
+
+			$this->assertTrue($this->assertRules($json, $rules));
+
+			// Date time format ISO 8601
+			foreach (["created_at", "updated_at", "completed_at", "due"] as $key) {
+				if (isset($json["data"]["attributes"][$key])) {
+					$this->assertTrue((bool)
+						// \S means PCRE study.
+						preg_match(
+							"/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+\d{2}:\d{2}$/S",
+							$json["data"]["attributes"][$key]
+						)
+					);
+				}
+			}
+		}
+	}
+
+	/**
+	 * @depends testUpdateItem
+	 * @dataProvider itemsToBeUpdated
+	 * @param int $checklistId
+	 * @param array $items
+	 * @return void
+	 */
+	public function testDeleteItem(int $checklistId, array $items): void
+	{
+
+		foreach ($items as $item) {
+			$data = [
+				"data" => [
+					"attributes" => $item["attributes"]
+				]
+			];
+
+			// dd($data);
+
+			$this->json("DELETE", sprintf("/checklists/%d/items/%d", $checklistId, $item["item_id"]), $data,
+				["Authorization" => TEST_TOKEN]);
+
+			// // Debug here
+			// dd($this->response);
+
+			// Make sure that the http response code is 204 OK
+			$this->assertEquals($this->response->status(), 204);
+		}
+	}
+
+	/**
+	 * @return array
+	 */
+	public function itemsToBeUpdated(): array
+	{
+		return [
+			[
+				1,
+				[
+					[
+						"item_id" => 1,
+						"attributes" =>  [
+							"description" => "test update 123123123",
+							"due" => "2019-03-19 10:33:21",
+							"urgency" => 2,
+							"assignee_id" => 123
+						]
+					]
+				]
+			]
+		];
 	}
 
 	/**
