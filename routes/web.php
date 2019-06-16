@@ -507,6 +507,7 @@ $router->patch("/checklists/{checklistId}/items/{itemId}", function ($checklistI
 				$itemObj->name = $data["data"]["attributes"]["description"];
 
 				$itemObj->update();
+
 				$ret = ["data" => [
 					"type" => "checklists",
 					"id" => $checklistId,
@@ -515,6 +516,14 @@ $router->patch("/checklists/{checklistId}/items/{itemId}", function ($checklistI
 						"self" => sprintf("%s/checklists/%d", env("API_URL"), $checklistId)
 					]
 				]];
+
+				foreach (["created_at", "updated_at", "completed_at", "due"] as $key) {
+					if (isset($ret["data"]["attributes"][$key])) {
+						$ret["data"]["attributes"][$key] = date("c",
+							strtotime($ret["data"]["attributes"][$key]));
+					}
+				}
+
 				return response()->json($ret, 200);
 			}
 		}
