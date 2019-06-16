@@ -523,3 +523,18 @@ $router->patch("/checklists/{checklistId}/items/{itemId}", function ($checklistI
 		return response()->json(["status" => "500", "error" => "Server Error"], 500);
 	}
 });
+
+$router->delete("/checklists/{checklistId}/items/{itemId}", function ($checklistId, $itemId) {
+	try {
+		if ($checklist = Checklist::find($checklistId)) {
+			if ($itemObj = Item::find($item->id)) {
+				$itemObj->delete();
+				return response(null, 204);
+			}
+		}
+		return response()->json(["status" => "404", "error" => "Not Found"], 404);
+	} catch (Error $e) {
+		return response()->json(["status" => "500", "error" => "Server Error"], 500);
+	}
+});
+
