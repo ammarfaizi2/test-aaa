@@ -296,7 +296,20 @@ class ItemsTest extends TestCase
 			}
 
 		}
+	}
 
+	/**
+	 * @depends testIncompleteItem
+	 * @dataProvider itemsToBeUpdated
+	 * @param int $checklistId
+	 * @param array $items
+	 * @return void
+	 */
+	public function testUpdateItem(int $checklistId, array $items): void
+	{
+		foreach ($items as $item) {
+
+		}
 	}
 
 	/**
