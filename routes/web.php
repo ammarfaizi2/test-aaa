@@ -197,7 +197,7 @@ $router->get("/checklists", function (Request $request) {
 	} catch (Error $e) {
 
 		// Debug here
-		dd($e->getMessage());
+		// dd($e->getMessage());
 
 		return response()->json(["status" => "500", "error" => "Server Error"], 500);
 	}
@@ -445,7 +445,8 @@ $router->post("/checklists/{checklistId}/items", function ($checklistId, Request
 				}
 			}
 
-			$item->assignee_id = $data["data"]["attributes"]["assignee_id"];
+			$item->task_id = $data["data"]["attributes"]["task_id"] ?? null;
+			$item->assignee_id = $data["data"]["attributes"]["assignee_id"] ?? null;
 			$item->checklist_id = $checklistId;
 			$item->item_id = $latestItemId + 1;
 			$item->name = $data["data"]["attributes"]["description"];

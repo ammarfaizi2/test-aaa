@@ -95,12 +95,12 @@ class ChecklistsTest extends TestCase
 
 		// Date time format ISO 8601
 		foreach (["created_at", "updated_at", "completed_at", "due"] as $key) {
-			if (isset($checklist["data"]["attributes"][$key])) {
+			if (isset($json["data"]["attributes"][$key])) {
 				$this->assertTrue((bool)
 					// \S means PCRE study.
 					preg_match(
 						"/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+\d{2}:\d{2}$/S",
-						$checklist["data"]["attributes"][$key]
+						$json["data"]["attributes"][$key]
 					)
 				);
 			}
@@ -243,12 +243,12 @@ class ChecklistsTest extends TestCase
 
 	// 	// Date time format ISO 8601
 	// 	foreach (["created_at", "updated_at", "completed_at", "due"] as $key) {
-	// 		if (isset($checklist["data"]["attributes"][$key])) {
+	// 		if (isset($json["data"]["attributes"][$key])) {
 	// 			$this->assertTrue((bool)
 	// 				// \S means PCRE study.
 	// 				preg_match(
 	// 					"/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+\d{2}:\d{2}$/S",
-	// 					$checklist["data"]["attributes"][$key]
+	// 					$json["data"]["attributes"][$key]
 	// 				)
 	// 			);
 	// 		}
@@ -316,12 +316,12 @@ class ChecklistsTest extends TestCase
 
 	// 	// Date time format ISO 8601
 	// 	foreach (["created_at", "updated_at", "completed_at", "due"] as $key) {
-	// 		if (isset($checklist["data"]["attributes"][$key])) {
+	// 		if (isset($json["data"]["attributes"][$key])) {
 	// 			$this->assertTrue((bool)
 	// 				// \S means PCRE study.
 	// 				preg_match(
 	// 					"/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+\d{2}:\d{2}$/S",
-	// 					$checklist["data"]["attributes"][$key]
+	// 					$json["data"]["attributes"][$key]
 	// 				)
 	// 			);
 	// 		}
