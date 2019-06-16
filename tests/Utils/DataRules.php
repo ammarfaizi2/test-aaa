@@ -17,13 +17,13 @@ trait DataRules
 	private function assertRules(array $array, array $rules): bool
 	{
 		foreach ($rules as $key => $rule) {
-			$key = explode('.', $key);
+			$key = explode(".", $key);
 			$ptrVal = null;
 
-			// // Debug here
-			// if (!$this->internalIndexCheck($array, $key, $ptrVal)) {
-			// 	dd($array, $key, $ptrVal);
-			// }
+			// Debug here
+			if (!$this->internalIndexCheck($array, $key, $ptrVal)) {
+				dd($array, $key, $ptrVal);
+			}
 
 			$this->assertTrue((bool)$this->internalIndexCheck($array, $key, $ptrVal));
 			if (is_array($rule) && ($rule[1] instanceof Closure)) {
@@ -32,8 +32,8 @@ trait DataRules
 			}
 
 			switch ($rule) {
-				case 'numeric':
-					$callback = 'is_numeric';
+				case "numeric":
+					$callback = "is_numeric";
 					break;
 				
 				default:
@@ -52,6 +52,12 @@ trait DataRules
 					};
 					break;
 			}
+
+			// // Debug here
+			// if (!$callback($ptrVal)) {
+			// 	dd($ptrVal, $callback, $key);
+			// }
+
 			$this->assertTrue((bool)$callback($ptrVal));
 		}
 		return true;
@@ -60,7 +66,7 @@ trait DataRules
 	/**
 	 * @param array $array
 	 * @param array $indexes
-	 * @param mixed $ptrVal
+	 * @param mixed &$ptrVal
 	 * @return bool
 	 */
 	private function internalIndexCheck(array $array, array $indexes, &$ptrVal): bool

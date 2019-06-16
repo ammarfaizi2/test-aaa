@@ -46,7 +46,7 @@ class ChecklistsTest extends TestCase
 	public function testCreateChecklist(array $checklist): void
 	{
 		$checklist = ["data" => ["attributes" => $checklist]];
-		$this->json('POST', '/checklists', $checklist, ['Authorization' => TEST_TOKEN]);
+		$this->json("POST", "/checklists", $checklist, ["Authorization" => TEST_TOKEN]);
 
 		// // Debug here
 		// dd($this->response);
@@ -58,14 +58,14 @@ class ChecklistsTest extends TestCase
 		$this->assertTrue($this->response instanceof JsonResponse);
 		$json = $this->response->original;
 
-		// We don't need items attribute anymore.
+		// We don"t need items attribute anymore.
 		unset($checklist["data"]["attributes"]["items"]);
 
 		// Set ID with the response value.
 		$checklist["data"]["attributes"]["id"] = $json["data"]["id"];
 
 		// Check the data in database.
-		$this->seeInDatabase('checklists', $checklist["data"]["attributes"]);
+		$this->seeInDatabase("checklists", $checklist["data"]["attributes"]);
 
 		// Make sure that the JSON has the same pattern and data type with
 		// https://kw-checklist.docs.stoplight.io/api-reference/checklists/post-checklists
@@ -107,254 +107,262 @@ class ChecklistsTest extends TestCase
 		}
 	}
 
-	/**
-	 * @depends testCreateChecklist
-	 * @return void
-	 */
-	public function testGetListOfChecklists(): void
-	{
+	// /**
+	//  * @depends testCreateChecklist
+	//  * @return void
+	//  */
+	// public function testGetListOfChecklists(): void
+	// {
 
-		$rules = [
-			"meta.count" => "numeric",
-			"meta.total" => "numeric",
+	// 	$rules = [
+	// 		"meta.count" => "numeric",
+	// 		"meta.total" => "numeric",
 
-			// first and last page must be available in any condition.
-			"links.first" => "string",
-			"links.last" => "string",
+	// 		// first and last page must be available in any condition.
+	// 		"links.first" => "string",
+	// 		"links.last" => "string",
 
-			// null should accept string too
-			"links.next" => null,
-			"links.prev" => null,
+	// 		// null should accept string too
+	// 		"links.next" => null,
+	// 		"links.prev" => null,
 
-			"data" => "array",
-		];
-
-
-		// Without any filter.
-		$this->json('GET', '/checklists', [], ['Authorization' => TEST_TOKEN]);
-
-		// Make sure that the http response code is 200 OK
-		$this->assertEquals($this->response->status(), 200);
-
-		$json = $this->response->original;
-		$this->assertTrue($this->assertRules($json, $rules));
-
-		// Test with filter
-		$query = [
-			"filter" => [
-				"description" => [
-					"like" => "*pick up*"
-				]
-			]
-		];
-
-		$this->json('GET', sprintf('/checklists?%s', 
-			http_build_query($query)), [], ['Authorization' => TEST_TOKEN]);
-
-		// Make sure that the http response code is 200 OK
-		$this->assertEquals($this->response->status(), 200);
-
-		$json = $this->response->original;
-		$this->assertTrue($this->assertRules($json, $rules));
+	// 		"data" => "array",
+	// 	];
 
 
-		// Test with sort
-		$query = [
-			"sort" => "-urgency"
-		];
+	// 	// Without any filter.
+	// 	$this->json("GET", "/checklists", [], ["Authorization" => TEST_TOKEN]);
 
-		$this->json('GET', sprintf('/checklists?%s', 
-			http_build_query($query)), [], ['Authorization' => TEST_TOKEN]);
+	// 	// Make sure that the http response code is 200 OK
+	// 	$this->assertEquals($this->response->status(), 200);
 
-		// // Debug here
-		// dd($this->response);
+	// 	$json = $this->response->original;
+	// 	$this->assertTrue($this->assertRules($json, $rules));
 
-		// Make sure that the http response code is 200 OK
-		$this->assertEquals($this->response->status(), 200);
+	// 	// Test with filter
+	// 	$query = [
+	// 		"filter" => [
+	// 			"description" => [
+	// 				"like" => "*pick up*"
+	// 			]
+	// 		]
+	// 	];
 
-		$json = $this->response->original;
-		$this->assertTrue($this->assertRules($json, $rules));
+	// 	$this->json("GET", sprintf("/checklists?%s", 
+	// 		http_build_query($query)), [], ["Authorization" => TEST_TOKEN]);
 
-		// WARNING:
-		// Please check this manually from your end!!!
-		// function "checklistsToBeCreated" must have at least 2 records
-		// in contiguos order with different urgency, so that the
-		// desc or asc sort can be proved in this section.
+	// 	// Make sure that the http response code is 200 OK
+	// 	$this->assertEquals($this->response->status(), 200);
 
-		// DESC sort
-		$this->assertTrue(count($json["data"]) > 1);
-		$this->assertTrue(
-			$json["data"][0]["attributes"]["urgency"] > $json["data"][1]["attributes"]["urgency"]
-		);
-
-		$query["sort"] = "urgency";
-		$this->json('GET', sprintf('/checklists?%s', 
-			http_build_query($query)), [], ['Authorization' => TEST_TOKEN]);
-		$json = $this->response->original;
-
-		// ASC sort
-		$this->assertTrue(count($json["data"]) > 1);
-		$this->assertTrue(
-			$json["data"][0]["attributes"]["urgency"] < $json["data"][1]["attributes"]["urgency"]
-		);
-	}
-
-	/**
-	 * @depends testGetListOfChecklists
-	 * @dataProvider checklistsToBeCreated
-	 * @param array $checklist
-	 * @return void
-	 */
-	public function testGetChecklist(array $checklist): void
-	{
-		static $id = 1;
-		$this->json('GET', sprintf('/checklists/%d', $id), [], ['Authorization' => TEST_TOKEN]);
-
-		// Make sure that the http response code is 200 OK
-		$this->assertEquals($this->response->status(), 200);
-
-		// Make sure that the response is a JSON.
-		$this->assertTrue($this->response instanceof JsonResponse);
-
-		$json = $this->response->original;
-
-		$rules = [
-			"data" => "array",
-			"data.type" => "string",
-			"data.id" => "numeric",
-			"data.attributes" => "array",
-			"data.attributes.object_domain" => "string",
-			"data.attributes.object_id" => "numeric",
-			"data.attributes.description" => "string",
-			"data.attributes.is_completed" => "boolean",
-			"data.attributes.due" => "string",
-			"data.attributes.urgency" => "numeric",
-			"data.attributes.completed_at" => "NULL",
-			"data.attributes.last_update_by" => "NULL",
-			"data.attributes.created_at" => "string",
-			"data.attributes.updated_at" => "string",
-			"data.links" => "array",
-			"data.links.self" => ["string", function (string $value) {
-				return filter_var($value, FILTER_VALIDATE_URL);
-			}]
-		];
-
-		$this->assertTrue($this->assertRules($json, $rules));
-
-		// Date time format ISO 8601
-		foreach (["created_at", "updated_at", "completed_at", "due"] as $key) {
-			if (isset($checklist["data"]["attributes"][$key])) {
-				$this->assertTrue((bool)
-					// \S means PCRE study.
-					preg_match(
-						"/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+\d{2}:\d{2}$/S",
-						$checklist["data"]["attributes"][$key]
-					)
-				);
-			}
-		}
-
-		$id++;
-	}
-
-	/**
-	 * @depends testGetChecklist
-	 * @dataProvider checklistsToBeUpdated
-	 * @param array $checklist
-	 * @return void
-	 */
-	public function testUpdateChecklist(array $checklist): void
-	{
-		static $id = 1;
-		$checklist = [
-			"data" => [
-				"type" => "checklists",
-				"id" => $id,
-				"attributes" => $checklist,
-				"links" => [
-					"self" => sprintf("%s/checklists/%d", env("APP_URL"), $id)
-				]
-			]
-		];
-		$this->json('PATCH', sprintf('/checklists/%d', $id), $checklist, ['Authorization' => TEST_TOKEN]);
-
-		// // Debug here
-		// dd($this->response);
-
-		// Make sure that the http response code is 200 OK
-		$this->assertEquals($this->response->status(), 200);
-
-		// Make sure that the response is a JSON.
-		$this->assertTrue($this->response instanceof JsonResponse);
-
-		$json = $this->response->original;
+	// 	$json = $this->response->original;
+	// 	$this->assertTrue($this->assertRules($json, $rules));
 
 
-		// https://kw-checklist.docs.stoplight.io/api-reference/checklists/put-checklists
-		$rules = [
-			"data" => "array",
-			"data.type" => "string",
-			"data.id" => "numeric",
-			"data.attributes" => "array",
-			"data.attributes.object_domain" => "string",
-			"data.attributes.object_id" => "numeric",
-			"data.attributes.description" => "string",
-			"data.attributes.is_completed" => "boolean",
-			"data.attributes.due" => "string",
-			"data.attributes.urgency" => "numeric",
-			"data.attributes.completed_at" => "NULL",
-			"data.attributes.last_update_by" => "NULL",
-			"data.attributes.created_at" => "string",
-			"data.attributes.updated_at" => "string",
-			"data.links" => "array",
-			"data.links.self" => ["string", function (string $value) {
-				return filter_var($value, FILTER_VALIDATE_URL);
-			}]
-		];
+	// 	// Test with sort
+	// 	$query = [
+	// 		"sort" => "-urgency"
+	// 	];
 
-		$this->assertTrue($this->assertRules($json, $rules));
+	// 	$this->json("GET", sprintf("/checklists?%s", 
+	// 		http_build_query($query)), [], ["Authorization" => TEST_TOKEN]);
 
-		// Date time format ISO 8601
-		foreach (["created_at", "updated_at", "completed_at", "due"] as $key) {
-			if (isset($checklist["data"]["attributes"][$key])) {
-				$this->assertTrue((bool)
-					// \S means PCRE study.
-					preg_match(
-						"/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+\d{2}:\d{2}$/S",
-						$checklist["data"]["attributes"][$key]
-					)
-				);
-			}
-		}
+	// 	// // Debug here
+	// 	// dd($this->response);
 
-		$id++;
-	}
+	// 	// Make sure that the http response code is 200 OK
+	// 	$this->assertEquals($this->response->status(), 200);
 
-	/**
-	 * @depends testUpdateChecklist
-	 * @dataProvider checklistsToBeCreated
-	 * @param array $checklist
-	 * @return void
-	 */
-	public function testDeleteChecklist(array $checklist): void
-	{
-		static $id = 1;
-		$this->json('DELETE', sprintf('/checklists/%d', $id), [], ['Authorization' => TEST_TOKEN]);
-		$this->assertEquals($this->response->status(), 204);
-		$id++;
-	}
+	// 	$json = $this->response->original;
+	// 	$this->assertTrue($this->assertRules($json, $rules));
 
-	/**
-	 * @depends testDeleteChecklist
-	 * @dataProvider checklistsToBeCreated
-	 * @param array $checklist
-	 * @return void
-	 */
-	public function testRecreateAfterDelete(array $checklist): void
-	{
-		$this->testCleanUp();
-		$this->testCreateChecklist($checklist);
-	}
+	// 	// WARNING:
+	// 	// Please check this manually from your end!!!
+	// 	// function "checklistsToBeCreated" must have at least 2 records
+	// 	// in contiguos order with different urgency, so that the
+	// 	// desc or asc sort can be proved in this section.
+
+	// 	// DESC sort
+	// 	$this->assertTrue(count($json["data"]) > 1);
+	// 	$this->assertTrue(
+	// 		$json["data"][0]["attributes"]["urgency"] > $json["data"][1]["attributes"]["urgency"]
+	// 	);
+
+	// 	$query["sort"] = "urgency";
+	// 	$this->json("GET", sprintf("/checklists?%s", 
+	// 		http_build_query($query)), [], ["Authorization" => TEST_TOKEN]);
+	// 	$json = $this->response->original;
+
+	// 	// ASC sort
+	// 	$this->assertTrue(count($json["data"]) > 1);
+	// 	$this->assertTrue(
+	// 		$json["data"][0]["attributes"]["urgency"] < $json["data"][1]["attributes"]["urgency"]
+	// 	);
+	// }
+
+	// /**
+	//  * @depends testGetListOfChecklists
+	//  * @dataProvider checklistsToBeCreated
+	//  * @param array $checklist
+	//  * @return void
+	//  */
+	// public function testGetChecklist(array $checklist): void
+	// {
+	// 	static $id = 1;
+	// 	$this->json("GET", sprintf("/checklists/%d", $id), [], ["Authorization" => TEST_TOKEN]);
+
+	// 	// Make sure that the http response code is 200 OK
+	// 	$this->assertEquals($this->response->status(), 200);
+
+	// 	// Make sure that the response is a JSON.
+	// 	$this->assertTrue($this->response instanceof JsonResponse);
+
+	// 	$json = $this->response->original;
+
+	// 	$rules = [
+	// 		"data" => "array",
+	// 		"data.type" => "string",
+	// 		"data.id" => "numeric",
+	// 		"data.attributes" => "array",
+	// 		"data.attributes.object_domain" => "string",
+	// 		"data.attributes.object_id" => "numeric",
+	// 		"data.attributes.description" => "string",
+	// 		"data.attributes.is_completed" => "boolean",
+	// 		"data.attributes.due" => "string",
+	// 		"data.attributes.urgency" => "numeric",
+	// 		"data.attributes.completed_at" => "NULL",
+	// 		"data.attributes.last_update_by" => "NULL",
+	// 		"data.attributes.created_at" => "string",
+	// 		"data.attributes.updated_at" => "string",
+	// 		"data.links" => "array",
+	// 		"data.links.self" => ["string", function (string $value) {
+	// 			return filter_var($value, FILTER_VALIDATE_URL);
+	// 		}]
+	// 	];
+
+	// 	$this->assertTrue($this->assertRules($json, $rules));
+
+	// 	// Date time format ISO 8601
+	// 	foreach (["created_at", "updated_at", "completed_at", "due"] as $key) {
+	// 		if (isset($checklist["data"]["attributes"][$key])) {
+	// 			$this->assertTrue((bool)
+	// 				// \S means PCRE study.
+	// 				preg_match(
+	// 					"/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+\d{2}:\d{2}$/S",
+	// 					$checklist["data"]["attributes"][$key]
+	// 				)
+	// 			);
+	// 		}
+	// 	}
+
+	// 	$id++;
+	// }
+
+	// /**
+	//  * @depends testGetChecklist
+	//  * @dataProvider checklistsToBeUpdated
+	//  * @param array $checklist
+	//  * @return void
+	//  */
+	// public function testUpdateChecklist(array $checklist): void
+	// {
+	// 	static $id = 1;
+	// 	$checklist = [
+	// 		"data" => [
+	// 			"type" => "checklists",
+	// 			"id" => $id,
+	// 			"attributes" => $checklist,
+	// 			"links" => [
+	// 				"self" => sprintf("%s/checklists/%d", env("APP_URL"), $id)
+	// 			]
+	// 		]
+	// 	];
+	// 	$this->json("PATCH", sprintf("/checklists/%d", $id), $checklist, ["Authorization" => TEST_TOKEN]);
+
+	// 	// // Debug here
+	// 	// dd($this->response);
+
+	// 	// Make sure that the http response code is 200 OK
+	// 	$this->assertEquals($this->response->status(), 200);
+
+	// 	// Make sure that the response is a JSON.
+	// 	$this->assertTrue($this->response instanceof JsonResponse);
+
+	// 	$json = $this->response->original;
+
+
+	// 	// https://kw-checklist.docs.stoplight.io/api-reference/checklists/put-checklists
+	// 	$rules = [
+	// 		"data" => "array",
+	// 		"data.type" => "string",
+	// 		"data.id" => "numeric",
+	// 		"data.attributes" => "array",
+	// 		"data.attributes.object_domain" => "string",
+	// 		"data.attributes.object_id" => "numeric",
+	// 		"data.attributes.description" => "string",
+	// 		"data.attributes.is_completed" => "boolean",
+	// 		"data.attributes.due" => "string",
+	// 		"data.attributes.urgency" => "numeric",
+	// 		"data.attributes.completed_at" => "NULL",
+	// 		"data.attributes.last_update_by" => "NULL",
+	// 		"data.attributes.created_at" => "string",
+	// 		"data.attributes.updated_at" => "string",
+	// 		"data.links" => "array",
+	// 		"data.links.self" => ["string", function (string $value) {
+	// 			return filter_var($value, FILTER_VALIDATE_URL);
+	// 		}]
+	// 	];
+
+	// 	$this->assertTrue($this->assertRules($json, $rules));
+
+	// 	// Date time format ISO 8601
+	// 	foreach (["created_at", "updated_at", "completed_at", "due"] as $key) {
+	// 		if (isset($checklist["data"]["attributes"][$key])) {
+	// 			$this->assertTrue((bool)
+	// 				// \S means PCRE study.
+	// 				preg_match(
+	// 					"/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+\d{2}:\d{2}$/S",
+	// 					$checklist["data"]["attributes"][$key]
+	// 				)
+	// 			);
+	// 		}
+	// 	}
+
+	// 	$id++;
+	// }
+
+	// /**
+	//  * @depends testUpdateChecklist
+	//  * @dataProvider checklistsToBeCreated
+	//  * @param array $checklist
+	//  * @return void
+	//  */
+	// public function testDeleteChecklist(array $checklist): void
+	// {
+	// 	static $id = 1;
+	// 	$this->json("DELETE", sprintf("/checklists/%d", $id), [], ["Authorization" => TEST_TOKEN]);
+	// 	$this->assertEquals($this->response->status(), 204);
+	// 	$id++;
+	// }
+
+	// /**
+	//  * @depends testDeleteChecklist
+	//  * @return void
+	//  */
+	// public function testDeleteEpilogue()
+	// {
+	// 	$this->testCleanUp();
+	// }
+
+	// /**
+	//  * @depends testDeleteEpilogue
+	//  * @dataProvider checklistsToBeCreated
+	//  * @param array $checklist
+	//  * @return void
+	//  */
+	// public function testRecreateAfterDelete(array $checklist): void
+	// {
+	// 	$this->testCreateChecklist($checklist);
+	// }
 
 	/**
 	 * @return array
