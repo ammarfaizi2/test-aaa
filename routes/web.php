@@ -547,3 +547,40 @@ $router->delete("/checklists/{checklistId}/items/{itemId}", function ($checklist
 	}
 });
 
+
+$router->post("/checklists/{checklistId}/items/_bulk", function ($checklistId, Request $request) {
+	try {
+		if ($checklist = Checklist::find($checklistId)) {
+			$this->validate($request, ["data" => "array"]);
+			$data = $request->json()->all();
+			$ret = ["data" => []];
+			foreach ($data["data"] as $item) {
+				if (isset(
+					$item["id"], $item["action"], $item["attributes"],
+					$item["attributes"]["description"],
+					$item["attributes"]["due"],
+					$item["attributes"]["urgency"]
+				)) {
+					if ($r = Item::where("checklist_id", $checklistId)
+						->where("item_id", $item["id"])
+						->first()) {
+						$r = Item::find($r->id);
+						$r->name = $item["attributes"]["description"];
+						$r->due = date("Y-m-d H:i:s", strtotime($item["attributes"]["due"]));
+						$r->urgency = $item["attributes"]["urgency"];
+						$r->save();
+						$ret["data"][] = [
+							"id" => $r->id,
+							"action" => "update",
+							"status" => 200
+						];
+					}
+				}
+			}
+			return response()->json($ret, 200);
+		}
+		return response()->json(["status" => "404", "error" => "Not Found"], 404);
+	} catch (Error $e) {
+		return response()->json(["status" => "500", "error" => "Server Error"], 500);
+	}
+});

@@ -364,6 +364,53 @@ class ItemsTest extends TestCase
 
 	/**
 	 * @depends testUpdateItem
+	 * @dataProvider itemsToBeBulkUpdated
+	 * @param int $checklistId
+	 * @param array $items
+	 * @return void
+	 */
+	public function testBulkUpdateItem(int $checklistId, array $items): void
+	{
+		foreach ($items as $item) {
+			$data = [
+				"data" => $item
+			];
+
+			// dd($data);
+
+			$this->json("POST", sprintf("/checklists/%d/items/_bulk", $checklistId), $data,
+				["Authorization" => TEST_TOKEN]);
+
+			// Debug here
+			// dd($this->response);
+
+			// Make sure that the http response code is 200 OK
+			$this->assertEquals($this->response->status(), 200);
+
+			// Make sure that the response is a JSON.
+			$this->assertTrue($this->response instanceof JsonResponse);
+			$json = $this->response->original;
+
+			$rules = [
+				"data" => "array"
+			];
+
+			$this->assertTrue($this->assertRules($json, $rules));
+
+			$rules = [
+				"id" => "numeric",
+				"action" => "string",
+				"status" => "numeric"
+			];
+			foreach ($json["data"] as $item) {
+				$this->assertTrue($this->assertRules($item, $rules));
+			}
+
+		}
+	}
+
+	/**
+	 * @depends testBulkUpdateItem
 	 * @dataProvider itemsToBeUpdated
 	 * @param int $checklistId
 	 * @param array $items
@@ -390,6 +437,40 @@ class ItemsTest extends TestCase
 			// Make sure that the http response code is 204 OK
 			$this->assertEquals($this->response->status(), 204);
 		}
+	}
+
+	/**
+	 * @return array
+	 */
+	public function itemsToBeBulkUpdated(): array
+	{
+		return [
+			[
+				1,
+				[
+					[
+						[
+							"id" => 1,
+							"action" => "update",
+							"attributes" =>  [
+								"description" => "test bulk update 12334535345",
+								"due" => "2020-03-19 10:30:20",
+								"urgency" => 4,
+							]
+						],
+						[
+							"id" => 2,
+							"action" => "update",
+							"attributes" =>  [
+								"description" => "test bulk update 12312",
+								"due" => "2019-03-19 09:12:10",
+								"urgency" => 10,
+							]
+						]
+					]
+				]
+			]
+		];
 	}
 
 	/**
