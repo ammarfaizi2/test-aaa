@@ -381,7 +381,7 @@ class ItemsTest extends TestCase
 
 			// dd($data);
 
-			$this->json("PATCH", sprintf("/checklists/%d/items/%d", $checklistId, $item["item_id"]), $data,
+			$this->json("DELETE", sprintf("/checklists/%d/items/%d", $checklistId, $item["item_id"]), $data,
 				["Authorization" => TEST_TOKEN]);
 
 			// // Debug here
